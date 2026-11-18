@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Students — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#f8fafc;min-height:100vh;color:#0f172a}
+
+.header{
+  background:linear-gradient(135deg,#0c4a6e 0%,#312e81 100%);
+  padding:0 28px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);
+  position:sticky;top:0;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}
+.logo-icon{background:linear-gradient(135deg,#0ea5e9,#7c3aed);width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 10px rgba(14,165,233,.4)}
+.nav-tabs{display:flex;gap:6px}
+.nav-tab{padding:8px 16px;border-radius:20px;text-decoration:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-tab.active{background:rgba(255,255,255,.2);color:#fff}
+.nav-tab.logout{background:rgba(255,255,255,.12)}
+.nav-tab.logout:hover{background:rgba(239,68,68,.25);color:#fca5a5}
+
+.main{max-width:1000px;margin:0 auto;padding:28px 24px}
+
+/* Hero */
+.page-hero{
+  background:linear-gradient(135deg,#0284c7 0%,#7c3aed 100%);
+  border-radius:24px;padding:24px 30px;color:#fff;margin-bottom:24px;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.page-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.page-hero::after{content:'';position:absolute;bottom:-40px;right:80px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
+.hero-left{position:relative}
+.hero-title{font-size:20px;font-weight:900;letter-spacing:-.3px}
+.hero-sub{font-size:13px;opacity:.7;font-weight:600;margin-top:5px}
+.hero-count{
+  position:relative;
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);
+  padding:12px 22px;border-radius:16px;text-align:center;flex-shrink:0;
+}
+.hero-count-num{font-size:26px;font-weight:900;line-height:1}
+.hero-count-lbl{font-size:11px;opacity:.65;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+
+/* Panel */
+.panel{background:#fff;border-radius:22px;padding:24px;margin-bottom:20px;border:1.5px solid #e2e8f0;box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.panel-icon{width:44px;height:44px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.panel-icon.cyan{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+.panel-icon.violet{background:linear-gradient(135deg,#ede9fe,#ddd6fe)}
+.panel-title{font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px}
+.panel-sub{font-size:12px;color:#94a3b8;font-weight:600}
+
+/* Add form */
+.add-form{display:flex;gap:10px;flex-wrap:wrap}
+.add-select{
+  flex:1;min-width:240px;border:1.5px solid #e2e8f0;border-radius:13px;
+  padding:12px 16px;font-size:14px;font-family:inherit;
+  background:#f8fafc;font-weight:600;color:#0f172a;
+  transition:.2s;cursor:pointer;
+}
+.add-select:focus{border-color:#0ea5e9;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.add-btn{
+  border:none;border-radius:13px;padding:12px 24px;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:14px;
+  cursor:pointer;font-family:inherit;transition:.18s;
+  box-shadow:0 4px 14px rgba(14,165,233,.3);white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+}
+.add-btn:hover{opacity:.9;box-shadow:0 6px 20px rgba(14,165,233,.42);transform:translateY(-2px)}
+.add-btn:active{transform:translateY(0)}
+
+/* Student cards */
+.student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.student-card{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1.5px solid #e2e8f0;border-radius:18px;
+  padding:16px 18px;background:#fff;transition:.2s;
+}
+.student-card:hover{border-color:#c4b5fd;background:#fdf4ff;box-shadow:0 4px 14px rgba(124,58,237,.08)}
+.sc-left{display:flex;align-items:center;gap:12px;min-width:0}
+.sc-avatar{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+}
+.sc-name{font-weight:800;font-size:14px;color:#0f172a;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-user{font-size:12px;color:#94a3b8;font-weight:600;margin-top:2px}
+.sc-date{font-size:11px;color:#cbd5e1;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:4px}
+.btn-remove{
+  border:1.5px solid #fecaca;background:#fff5f5;color:#dc2626;
+  border-radius:11px;padding:8px 14px;font-size:12px;font-weight:900;
+  cursor:pointer;font-family:inherit;transition:.15s;flex-shrink:0;
+  white-space:nowrap;
+}
+.btn-remove:hover{background:#fee2e2;border-color:#fca5a5}
+
+/* Empty states */
+.empty-state{
+  text-align:center;padding:40px 24px;
+  border:2px dashed #e2e8f0;border-radius:18px;background:#f8fafc;
+}
+.empty-icon{font-size:36px;margin-bottom:10px;display:block}
+.empty-title{font-size:14px;font-weight:800;color:#64748b;margin-bottom:4px}
+.empty-sub{font-size:13px;color:#94a3b8;font-weight:600}
+
+/* Credentials panel */
+.cred-table{width:100%;border-collapse:collapse}
+.cred-table th{text-align:left;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;padding:0 12px 10px}
+.cred-table td{padding:12px;font-size:13px;font-weight:700;border-top:1.5px solid #f1f5f9}
+.cred-table tr:hover td{background:#f8fafc}
+.cred-name{font-weight:900;color:#0f172a}
+.cred-username{color:#0284c7}
+.cred-pw{font-family:monospace;color:#7c3aed;letter-spacing:.5px}
+.btn-toggle-pw{
+  border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;
+  border-radius:8px;padding:4px 10px;font-size:11px;font-weight:800;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.btn-toggle-pw:hover{border-color:#c4b5fd;background:#fdf4ff;color:#7c3aed}
+.cred-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.btn-toggle-all{
+  border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;
+  border-radius:11px;padding:8px 16px;font-size:12px;font-weight:800;
+  cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px;
+}
+.btn-toggle-all:hover{border-color:#0ea5e9;background:#f0f9ff;color:#0284c7}
+
+@media(max-width:640px){
+  .header{padding:0 16px}
+  .logo{font-size:14px}
+  .nav-tab{padding:7px 10px;font-size:12px}
+  .main{padding:18px 16px}
+  .page-hero{padding:20px}
+  .hero-title{font-size:17px}
+  .panel{padding:18px}
+  .student-grid{grid-template-columns:1fr}
+  .add-form{flex-direction:column}
+  .add-select,.add-btn{width:100%}
+}
+@media(max-width:480px){
+  .logo-lbl{display:none}
+  .tab-lbl{display:none}
+  .nav-tab{padding:8px 10px}
+  .main{padding:14px 12px}
+  .page-hero{padding:16px}
+  .hero-title{font-size:16px}
+  .panel{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-icon">🎓</div><span class="logo-lbl"> Emotion Learning</span></div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/teacher?class={{ class_id }}">🏠<span class="tab-lbl" data-i18n="nav_dashboard"> Dashboard</span></a>
+    <a class="nav-tab" href="/teacher/class/{{ class_id }}">←<span class="tab-lbl" data-i18n="btn_back"> Back</span></a>
+    <a class="nav-tab active" href="/teacher/class/{{ class_id }}/students">👥<span class="tab-lbl" data-i18n="nav_manage_students"> Manage Students</span></a>
+    <a class="nav-tab logout" href="/logout">🚪<span class="tab-lbl" data-i18n="btn_sign_out"> Sign Out</span></a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-title" data-i18n="title_manage_st">👥 Manage Students</div>
+      <div class="hero-sub">{{ class_name }}</div>
+    </div>
+    <div class="hero-count">
+      <div class="hero-count-num">{{ students|length if students else 0 }}</div>
+      <div class="hero-count-lbl" data-i18n="lbl_enrolled">Enrolled Students</div>
+    </div>
+  </div>
+
+  <!-- Add Student -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-icon cyan">➕</div>
+      <div>
+        <div class="panel-title" data-i18n="lbl_add_student">Add Student to Class</div>
+        <div class="panel-sub" data-i18n="msg_select_student">Select a student not yet enrolled in this class.</div>
+      </div>
+    </div>
+
+    {% if available_students and available_students|length > 0 %}
+    <form class="add-form" method="POST" action="/teacher/class/{{ class_id }}/students/add">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <select class="add-select" name="student_id" required>
+        <option value="">— Select a student —</option>
+        {% for s in available_students %}
+        <option value="{{ s.id }}">{{ s.name }} (@{{ s.username }})</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="add-btn" data-i18n="btn_add">➕ Add</button>
+    </form>
+    {% else %}
+    <div class="empty-state">
+      <span class="empty-icon">✅</span>
+      <div class="empty-title" data-i18n="msg_all_enrolled">All registered students are already in this class.</div>
+      <div class="empty-sub" data-i18n="msg_no_available">No students available to add.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Enrolled Students -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-icon violet">👥</div>
+      <div>
+        <div class="panel-title" data-i18n="lbl_enrolled">Enrolled Students</div>
+        <div class="panel-sub" data-i18n="msg_unenroll_sub">Click Remove to unenroll a student from this class.</div>
+      </div>
+    </div>
+
+    {% if students and students|length > 0 %}
+    <div class="student-grid">
+      {% for s in students %}
+      <div class="student-card">
+        <div class="sc-left">
+          <div class="sc-avatar">{{ s.name[0]|upper }}</div>
+          <div style="min-width:0">
+            <div class="sc-name">{{ s.name }}</div>
+            <div class="sc-user">@{{ s.username }}</div>
+            {% if s.joined_at %}
+            <div class="sc-date">
+              📅
+              {% if s.joined_at is string %}
+                {{ s.joined_at[:10] }}
+              {% else %}
+                {{ s.joined_at.strftime('%d %b %Y') }}
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <form method="POST" action="/teacher/class/{{ class_id }}/students/remove/{{ s.id }}"
+              onsubmit="return confirm('Remove {{ s.name }} from this class?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn-remove" data-i18n="btn_remove">Remove</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span class="empty-icon">📭</span>
+      <div class="empty-title" data-i18n="msg_no_students2">No students in this class yet.</div>
+      <div class="empty-sub" data-i18n="msg_add_students">Add students using the form above.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Student Credentials -->
+  {% if students_creds and students_creds|length > 0 %}
+  <div class="panel">
+    <div class="cred-panel-head">
+      <div class="panel-head" style="margin-bottom:0;flex:1">
+        <div class="panel-icon" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">🔑</div>
+        <div>
+          <div class="panel-title" data-i18n="lbl_credentials">Student Credentials</div>
+          <div class="panel-sub">Share with students who forgot their password.</div>
+        </div>
+      </div>
+      <button class="btn-toggle-all" onclick="toggleAllPasswords(this)" data-i18n="btn_show_all_pw">👁 Show All Passwords</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="cred-table">
+        <thead>
+          <tr>
+            <th data-i18n="th_no">#</th>
+            <th data-i18n="th_name">Name</th>
+            <th data-i18n="th_username">Username</th>
+            <th data-i18n="th_password">Password</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students_creds %}
+          <tr>
+            <td style="color:#94a3b8;font-size:12px">{{ loop.index }}</td>
+            <td><span class="cred-name">{{ s.name }}</span></td>
+            <td><span class="cred-username">@{{ s.username }}</span></td>
+            <td><span class="cred-pw" data-pw="{{ s.password }}" data-visible="0">••••••••</span></td>
+            <td><button class="btn-toggle-pw" onclick="togglePw(this)" data-i18n="btn_show">Show</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+function togglePw(btn) {
+  const span = btn.closest('tr').querySelector('.cred-pw');
+  if (span.dataset.visible === '0') {
+    span.textContent = span.dataset.pw;
+    span.dataset.visible = '1';
+    btn.textContent = t('btn_hide');
+  } else {
+    span.textContent = '••••••••';
+    span.dataset.visible = '0';
+    btn.textContent = t('btn_show');
+  }
+}
+function toggleAllPasswords(btn) {
+  const spans = document.querySelectorAll('.cred-pw');
+  const btns  = document.querySelectorAll('.btn-toggle-pw');
+  const showing = btn.dataset.allShowing !== '1';
+  btn.dataset.allShowing = showing ? '1' : '0';
+  spans.forEach(s => {
+    s.textContent = showing ? s.dataset.pw : '••••••••';
+    s.dataset.visible = showing ? '1' : '0';
+  });
+  btns.forEach(b => { b.textContent = showing ? t('btn_hide') : t('btn_show'); });
+  btn.textContent = showing ? t('btn_hide_all_pw') : t('btn_show_all_pw');
+}
+</script>
+</body>
+</html>

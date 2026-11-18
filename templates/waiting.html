@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waiting — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f0f9ff;position:relative;overflow:hidden}
+.blob{position:fixed;border-radius:50%;filter:blur(72px);opacity:.35;pointer-events:none;z-index:0}
+.b1{width:380px;height:380px;background:#f59e0b;top:-120px;right:-100px}
+.b2{width:340px;height:340px;background:#0ea5e9;bottom:-100px;left:-80px}
+.b3{width:260px;height:260px;background:#ef4444;top:30%;left:60%}
+.card{position:relative;z-index:1;background:#fff;border-radius:28px;padding:52px 40px;width:100%;max-width:440px;text-align:center;box-shadow:0 20px 60px rgba(14,165,233,.15)}
+.pulse-wrap{margin:0 auto 28px;position:relative;width:90px;height:90px}
+.pulse-ring{width:90px;height:90px;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;animation:pulse 2s ease-in-out infinite;box-shadow:0 0 0 0 rgba(245,158,11,.4);position:relative;z-index:1}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}70%{box-shadow:0 0 0 22px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+h1{font-size:22px;font-weight:900;color:#0f172a;margin-bottom:8px}
+.class-badge{background:linear-gradient(135deg,#fffbeb,#fef3c7);color:#92400e;padding:10px 24px;border-radius:999px;font-weight:900;font-size:14px;display:inline-block;margin:16px 0;border:2px solid #fcd34d}
+p{color:#64748b;font-size:14px;line-height:1.7;margin-bottom:4px;font-weight:600}
+p strong{color:#0f172a}
+.emotion-row{display:flex;justify-content:center;gap:12px;margin:20px 0;font-size:22px}
+.countdown{margin-top:16px;font-size:13px;color:#94a3b8;font-weight:700;background:#f8fafc;border-radius:12px;padding:10px 20px;display:inline-block}
+.logout-link{margin-top:22px}
+.logout-link a{color:#7c3aed;font-size:13px;font-weight:800;text-decoration:none}
+.logout-link a:hover{text-decoration:underline}
+.lang-bar{position:fixed;top:14px;right:16px;display:inline-flex;align-items:center;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border-radius:10px;padding:3px;gap:2px;box-shadow:0 2px 12px rgba(0,0,0,.1);z-index:10}
+.lang-btn{padding:5px 10px;border:none;border-radius:7px;background:transparent;color:#64748b;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;transition:.2s;font-family:'Nunito',sans-serif}
+.lang-btn:hover{background:#e2e8f0;color:#334155}
+.lang-btn--active{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;box-shadow:0 1px 4px rgba(99,102,241,.35)}
+@media(max-width:480px){
+  .card{padding:36px 22px;border-radius:22px}
+  h1{font-size:18px}
+  .class-badge{padding:8px 18px;font-size:13px}
+  .countdown{padding:8px 16px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="lang-bar">
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" data-lang="id" onclick="setLang('id')">ID</button>
+  <button class="lang-btn" data-lang="my" onclick="setLang('my')">MY</button>
+</div>
+<div class="card">
+  <div class="pulse-wrap"><div class="pulse-ring">⏳</div></div>
+  <h1 data-i18n="title_waiting">Waiting for Session</h1>
+  <div class="class-badge">🏫 {{ class_name }}</div>
+  <p>Hello, <strong>{{ name }}</strong>! <span data-i18n="msg_all_set">You're all set.</span></p>
+  <p data-i18n="msg_you_set">You'll be redirected automatically when your teacher starts the session.</p>
+  <div class="emotion-row">😊 🙂 😕 😤</div>
+  <div class="countdown" id="countdown" data-i18n="status_waiting">Connected — waiting for session...</div>
+  <div class="logout-link"><a href="/logout" data-i18n="btn_sign_out">Sign out</a></div>
+</div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+const CLASS_ID = {{ class_id }};
+const socket = io();
+
+socket.on('connect', () => {
+  socket.emit('join_class', { class_id: CLASS_ID });
+});
+
+socket.on('session_started', () => {
+  document.getElementById('countdown').textContent = t('status_started');
+  document.querySelector('.pulse-ring').textContent = '🚀';
+  setTimeout(() => { location.href = '/student'; }, 800);
+});
+
+socket.on('disconnect', () => {
+  document.getElementById('countdown').textContent = t('status_lost');
+});
+
+// Fallback poll every 30s in case socket fails
+setInterval(() => { location.reload(); }, 30000);
+</script>
+</body>
+</html>

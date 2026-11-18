@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto-Adjust Difficulty — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#f5f3ff;color:#0f172a}
+.header{background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+.header .logo{font-weight:700;font-size:16px}
+.header-links{display:flex;gap:8px}
+.header-links a{color:#fff;text-decoration:none;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;transition:.15s}
+.header-links a:hover{background:rgba(255,255,255,.25)}
+.main{max-width:1000px;margin:28px auto;padding:0 20px}
+.page-title{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:18px}
+.section{background:#fff;border:1.5px solid #e5e7eb;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.section h3{font-size:16px;font-weight:700;margin-bottom:10px}
+.meta-row{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px}
+.meta-item{font-size:14px;color:#374151}
+.meta-item strong{color:#0f172a}
+.rule-note{font-size:13px;color:#64748b;margin-bottom:16px;padding:10px 14px;background:#f0f4ff;border-radius:10px;border:1px solid #c7d2fe}
+.btn{border:none;border-radius:10px;padding:11px 20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.adjust-status{display:inline-block;margin-left:12px;font-size:13px;color:#64748b;vertical-align:middle}
+.no-session-note{font-size:13px;color:#94a3b8;padding:12px 14px;background:#fafafa;border-radius:10px;border:1px solid #f1f5f9}
+table{width:100%;border-collapse:collapse}
+th,td{padding:11px 12px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:14px}
+th{color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;background:#f8fafc}
+td{color:#374151}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge-Happy{background:#dcfce7;color:#166534}
+.badge-Engaged{background:#dbeafe;color:#1d4ed8}
+.badge-Confused{background:#fef3c7;color:#92400e}
+.badge-Frustrated{background:#fee2e2;color:#991b1b}
+.empty-note{font-size:13px;color:#94a3b8}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">🎓 Emotion Learning</div>
+  <div class="header-links">
+    <a href="/teacher">🏠 <span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="/teacher/reports/{{ class_id }}">← <span data-i18n="nav_reports">Reports</span></a>
+    <a href="/teacher/questions">🧩 <span data-i18n="nav_questions">Question Bank</span></a>
+  </div>
+</div>
+
+<div class="main">
+  <h1 class="page-title" data-i18n="title_auto_adjust">Auto-Adjust Question Difficulty</h1>
+
+  <div class="section">
+    <div class="meta-row">
+      <div class="meta-item"><strong data-i18n="lbl_class_id">Class ID:</strong> {{ class_id }}</div>
+      <div class="meta-item"><strong data-i18n="lbl_active_session">Active Session:</strong> {{ active_session.session_name if active_session else '—' }}</div>
+    </div>
+    <div class="rule-note">
+      <span data-i18n="lbl_rule">Rule:</span> <strong data-i18n="emotion_happy">Happy</strong> → <span data-i18n="diff_hard">Hard</span> &nbsp;|&nbsp; <strong data-i18n="emotion_engaged">Engaged</strong> → <span data-i18n="diff_medium">Medium</span> &nbsp;|&nbsp; <strong data-i18n="emotion_confused">Confused</strong> / <strong data-i18n="emotion_frustrated">Frustrated</strong> → <span data-i18n="diff_easy">Easy</span>
+    </div>
+    {% if active_session %}
+      <button class="btn" id="btn-adjust" data-i18n="btn_adjust">⚡ Auto-Adjust Now</button>
+      <span id="status" class="adjust-status"></span>
+    {% else %}
+      <p class="no-session-note" data-i18n="msg_start_session2">No active session — auto-adjust cannot run. Start a session from the class page first.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h3 data-i18n="lbl_latest_emotions">Latest Student Emotions</h3>
+    {% if latest_emotions %}
+    <table>
+      <thead><tr><th data-i18n="th_name">Name</th><th data-i18n="th_username">Username</th><th data-i18n="th_emotion">Emotion</th><th data-i18n="lbl_confidence">Confidence</th></tr></thead>
+      <tbody>
+      {% for e in latest_emotions %}
+      {% set emo = e.emotion_category or 'Engaged' %}
+      <tr>
+        <td>{{ e.name }}</td>
+        <td>{{ e.username }}</td>
+        <td><span class="badge badge-{{ emo }}">{{ emo }}</span></td>
+        <td>{{ ((e.confidence or 0) * 100)|round(1) }}%</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty-note" data-i18n="msg_no_emotions">No recent emotion data yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const activeSessionId = {{ active_session.id if active_session else 'null' }};
+document.getElementById('btn-adjust')?.addEventListener('click', async () => {
+  const status = document.getElementById('status');
+  status.textContent = 'Processing...';
+  try {
+    const res = await fetch('/api/auto-adjust-difficulty', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ session_id: activeSessionId, class_id: {{ class_id }} })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (Array.isArray(data.updates) && data.updates.length > 0) {
+        status.textContent = `Done — ${data.updates.map(u => `${u.category} → ${u.difficulty}`).join(', ')}`;
+      } else {
+        status.textContent = 'Done — no changes needed.';
+      }
+    } else {
+      status.textContent = `Failed: ${data.message || 'unknown error'}`;
+    }
+  } catch (e) {
+    status.textContent = 'Network / server error';
+  }
+});
+</script>
+</body>
+</html>

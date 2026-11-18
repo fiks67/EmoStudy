@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Question Bank — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh}
+
+.header{
+  background:linear-gradient(135deg,#0c4a6e 0%,#312e81 100%);
+  padding:0 28px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);
+  position:sticky;top:0;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}
+.logo-icon{background:linear-gradient(135deg,#0ea5e9,#7c3aed);width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 10px rgba(14,165,233,.4)}
+.nav-tabs{display:flex;gap:6px}
+.nav-tab{padding:8px 16px;border-radius:20px;text-decoration:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-tab.logout{background:rgba(255,255,255,.12)}
+.nav-tab.logout:hover{background:rgba(239,68,68,.25);color:#fca5a5}
+
+.main{max-width:1100px;margin:0 auto;padding:28px 24px}
+
+/* Hero */
+.page-hero{
+  background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
+  border-radius:24px;padding:24px 30px;color:#fff;margin-bottom:24px;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.page-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.hero-title{font-size:20px;font-weight:900;position:relative}
+.hero-sub{font-size:13px;opacity:.7;font-weight:600;margin-top:4px;position:relative}
+.hero-count{
+  position:relative;
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);
+  padding:10px 20px;border-radius:14px;text-align:center;flex-shrink:0;
+}
+.hero-count-num{font-size:22px;font-weight:900}
+.hero-count-lbl{font-size:11px;opacity:.65;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* Panel */
+.panel{background:#fff;border-radius:22px;padding:24px;margin-bottom:20px;border:1.5px solid #e2e8f0;box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.panel-icon{width:44px;height:44px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.panel-icon.violet{background:linear-gradient(135deg,#ede9fe,#ddd6fe)}
+.panel-icon.cyan{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+.panel-title{font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px}
+.panel-sub{font-size:12px;color:#94a3b8;font-weight:600}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1 / -1}
+.field-group{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:11px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:.5px}
+.field-label span{font-weight:600;color:#94a3b8;text-transform:none;letter-spacing:0}
+.field-input,.field-select,.field-textarea{
+  border:1.5px solid #e2e8f0;border-radius:12px;
+  padding:11px 14px;font-size:14px;font-family:inherit;
+  background:#f8fafc;font-weight:600;color:#0f172a;transition:.2s;width:100%;
+}
+.field-input:focus,.field-select:focus,.field-textarea:focus{
+  border-color:#7c3aed;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(124,58,237,.1)
+}
+.field-textarea{min-height:90px;resize:vertical}
+.field-select{cursor:pointer}
+
+/* Options grid */
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.option-wrap{position:relative}
+.option-prefix{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  font-size:12px;font-weight:900;color:#7c3aed;
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+  width:22px;height:22px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:1;
+}
+.option-wrap .field-input{padding-left:44px}
+
+/* Difficulty select colors */
+.diff-badge{display:inline-flex;align-items:center;padding:5px 13px;border-radius:999px;font-size:12px;font-weight:900;border:1.5px solid}
+.diff-very_easy{background:#ecfdf5;color:#065f46;border-color:#6ee7b7}
+.diff-easy{background:#f0fdf4;color:#166534;border-color:#86efac}
+.diff-medium{background:#fffbeb;color:#92400e;border-color:#fcd34d}
+.diff-hard{background:#fef2f2;color:#7f1d1d;border-color:#fca5a5}
+.diff-very_hard{background:#4c0519;color:#fda4af;border-color:#9f1239}
+
+/* Question type toggle */
+.qtype-btn{
+  padding:9px 18px;border:1.5px solid #e2e8f0;border-radius:12px;
+  background:#f8fafc;cursor:pointer;font-size:13px;font-weight:800;
+  color:#64748b;transition:.18s;font-family:inherit;
+}
+.qtype-btn:hover{border-color:#c4b5fd;color:#5b21b6;background:#fdf4ff}
+.qtype-btn.active{border-color:#7c3aed;background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#5b21b6}
+
+/* Language translation tabs */
+.lang-toggle{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:10px 14px;border:1.5px dashed #c4b5fd;border-radius:12px;
+  background:#faf5ff;margin-top:4px;user-select:none;
+}
+.lang-toggle-lbl{font-size:12px;font-weight:800;color:#5b21b6}
+.lang-toggle-arrow{font-size:11px;color:#7c3aed;transition:.2s}
+.lang-body{display:none;margin-top:12px;border:1.5px solid #e9d5ff;border-radius:14px;overflow:hidden}
+.lang-body.open{display:block}
+.lang-tabs-row{display:flex;border-bottom:1.5px solid #e9d5ff;background:#faf5ff}
+.ltab{
+  padding:9px 20px;font-size:12px;font-weight:800;color:#7c3aed;
+  border:none;background:none;cursor:pointer;font-family:inherit;
+  border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:.15s;
+}
+.ltab.active{border-bottom-color:#7c3aed;background:#fff;color:#5b21b6}
+.ltab:hover:not(.active){background:#ede9fe}
+.lang-panel{display:none;padding:16px;background:#fff}
+.lang-panel.active{display:block}
+.lang-panel .options-grid{grid-template-columns:1fr 1fr}
+
+/* Video section */
+.video-section{margin-top:4px}
+.video-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.vtab{
+  padding:9px 18px;border:1.5px solid #e2e8f0;border-radius:12px;
+  background:#f8fafc;cursor:pointer;font-size:13px;font-weight:800;
+  color:#64748b;transition:.18s;font-family:inherit;
+}
+.vtab:hover{border-color:#c4b5fd;color:#5b21b6;background:#fdf4ff}
+.vtab.active{border-color:#7c3aed;background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#5b21b6}
+.video-area{display:none}
+.video-area.active{display:block}
+
+.video-preview{margin-top:12px;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:16/9;display:none;max-height:220px}
+.video-preview iframe,.video-preview video{width:100%;height:100%;border:none;display:block}
+.image-preview{margin-top:12px;border-radius:14px;overflow:hidden;display:none;text-align:center;background:#f5f3ff;padding:10px}
+.image-preview img{max-width:100%;max-height:260px;border-radius:10px;object-fit:contain}
+
+.drop-zone{
+  border:2px dashed #c4b5fd;border-radius:14px;padding:28px 20px;
+  text-align:center;cursor:pointer;transition:.2s;background:#faf5ff;
+}
+.drop-zone:hover,.drop-zone.dragover{background:#ede9fe;border-color:#7c3aed}
+.drop-zone input[type=file]{display:none}
+.dz-icon{font-size:32px;margin-bottom:8px}
+.dz-title{font-size:14px;font-weight:800;color:#5b21b6;margin-bottom:4px}
+.dz-desc{font-size:12px;color:#94a3b8;font-weight:600}
+
+/* Submit button */
+.submit-row{display:flex;justify-content:flex-end;margin-top:20px}
+.btn-submit{
+  border:none;border-radius:13px;padding:13px 28px;
+  background:linear-gradient(135deg,#7c3aed,#0ea5e9);
+  color:#fff;font-weight:900;font-size:15px;
+  cursor:pointer;font-family:inherit;transition:.18s;
+  box-shadow:0 4px 16px rgba(124,58,237,.3);
+  display:flex;align-items:center;gap:8px;
+}
+.btn-submit:hover{opacity:.9;box-shadow:0 6px 20px rgba(124,58,237,.42);transform:translateY(-2px)}
+.btn-submit:active{transform:translateY(0)}
+
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.filter-label{font-size:12px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.filter-pill{
+  padding:7px 16px;border-radius:999px;font-size:12px;font-weight:800;
+  border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;
+  text-decoration:none;cursor:pointer;transition:.15s;font-family:inherit;
+}
+.filter-pill:hover{border-color:#c4b5fd;color:#5b21b6;background:#fdf4ff}
+.filter-pill.active{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-color:#7c3aed;box-shadow:0 3px 10px rgba(124,58,237,.3)}
+
+/* Question cards */
+.q-count{font-size:13px;color:#94a3b8;font-weight:700;margin-bottom:14px}
+.q-count strong{color:#0f172a}
+.q-list{display:flex;flex-direction:column;gap:10px}
+.q-card{
+  border:1.5px solid #e2e8f0;border-radius:18px;padding:18px 20px;
+  background:#fff;transition:.2s;position:relative;overflow:hidden;
+}
+.q-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:linear-gradient(180deg,#7c3aed,#0ea5e9);opacity:0;transition:.2s}
+.q-card:hover{border-color:#c4b5fd;box-shadow:0 4px 16px rgba(124,58,237,.1);transform:translateY(-1px)}
+.q-card:hover::before{opacity:1}
+.q-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.q-text{font-size:14px;font-weight:700;color:#0f172a;line-height:1.5;flex:1;min-width:0}
+.q-card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.q-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:999px;font-size:11px;font-weight:900;border:1.5px solid}
+.q-badge.correct{background:#ecfdf5;color:#065f46;border-color:#6ee7b7}
+.q-badge.topic{background:#f0f9ff;color:#0369a1;border-color:#bae6fd}
+.q-badge.vid-yt{background:#fee2e2;color:#dc2626;border-color:#fca5a5;cursor:pointer}
+.q-badge.vid-up{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;cursor:pointer}
+.q-badge.vid-img{background:#dcfce7;color:#15803d;border-color:#86efac;cursor:pointer}
+.q-badge.vid-yt:hover,.q-badge.vid-up:hover,.q-badge.vid-img:hover{filter:brightness(.95)}
+.btn-del{
+  border:1.5px solid #fecaca;background:#fff5f5;color:#dc2626;
+  border-radius:10px;padding:7px 14px;font-size:12px;font-weight:900;
+  cursor:pointer;font-family:inherit;transition:.15s;flex-shrink:0;
+}
+.btn-del:hover{background:#fee2e2;border-color:#fca5a5}
+
+.empty{text-align:center;color:#94a3b8;padding:44px 24px;border:2px dashed #e2e8f0;border-radius:18px;background:#f8fafc;font-size:14px;font-weight:700}
+.empty-icon{font-size:36px;display:block;margin-bottom:10px}
+
+/* Edit modal */
+.edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px);padding:16px}
+.edit-overlay.open{display:flex}
+.edit-modal{background:#fff;border-radius:24px;width:min(780px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.25)}
+.edit-modal::-webkit-scrollbar{width:4px}
+.edit-modal::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:4px}
+.edit-modal-head{padding:22px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.edit-modal-title{font-size:16px;font-weight:900;color:#0f172a}
+.edit-modal-close{background:#f1f5f9;border:none;color:#64748b;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.edit-modal-close:hover{background:#e2e8f0;color:#0f172a}
+.edit-modal-body{padding:20px 24px 24px}
+.btn-edit{
+  border:1.5px solid #bae6fd;background:#f0f9ff;color:#0369a1;
+  border-radius:10px;padding:7px 14px;font-size:12px;font-weight:900;
+  cursor:pointer;font-family:inherit;transition:.15s;flex-shrink:0;
+}
+.btn-edit:hover{background:#e0f2fe;border-color:#7dd3fc}
+
+/* Video modal */
+.vid-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.vid-modal-overlay.open{display:flex}
+.vid-modal{background:#000;border-radius:20px;overflow:hidden;width:min(820px,92vw);aspect-ratio:16/9;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.vid-modal-close{position:absolute;top:12px;right:14px;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;z-index:10;transition:.15s}
+.vid-modal-close:hover{background:rgba(255,255,255,.32)}
+.vid-modal iframe,.vid-modal video{width:100%;height:100%;border:none;display:block}
+
+@media(max-width:640px){
+  .header{padding:0 16px}
+  .logo{font-size:14px}
+  .nav-tab{padding:7px 10px;font-size:12px}
+  .main{padding:18px 16px}
+  .form-grid,.options-grid{grid-template-columns:1fr}
+  .full{grid-column:1}
+  .panel{padding:18px}
+  .q-card-top{flex-direction:column}
+  .q-card-meta{margin-top:8px}
+}
+@media(max-width:480px){
+  .logo-lbl{display:none}
+  .tab-lbl{display:none}
+  .nav-tab{padding:8px 10px}
+  .main{padding:14px 12px}
+  .page-hero{padding:16px}
+  .panel{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-icon">🎓</div><span class="logo-lbl"> Emotion Learning</span></div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/teacher">🏠<span class="tab-lbl" data-i18n="nav_dashboard"> Dashboard</span></a>
+    <a class="nav-tab" href="javascript:history.back()">←<span class="tab-lbl" data-i18n="btn_back"> Back</span></a>
+    <a class="nav-tab logout" href="/logout">🚪<span class="tab-lbl" data-i18n="btn_sign_out"> Sign Out</span></a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="page-hero">
+    <div>
+      <div class="hero-title" data-i18n="title_question_bank">❓ Question Bank</div>
+      <div class="hero-sub" data-i18n="msg_manage_q_sub">Manage quiz questions used in learning sessions.</div>
+    </div>
+    <div class="hero-count">
+      <div class="hero-count-num">{{ questions|length }}</div>
+      <div class="hero-count-lbl" data-i18n="lbl_total_questions">Total Questions</div>
+    </div>
+  </div>
+
+  <!-- Add Question -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-icon violet">➕</div>
+      <div>
+        <div class="panel-title" data-i18n="lbl_add_question">Add New Question</div>
+        <div class="panel-sub" data-i18n="msg_fill_fields">Fill in all required fields, then click Add Question.</div>
+      </div>
+    </div>
+
+    <form action="/teacher/questions/create" method="POST" enctype="multipart/form-data" onsubmit="return validateQForm(this)">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+
+        <div class="field-group full">
+          <label class="field-label">Question Type</label>
+          <div style="display:flex;gap:10px">
+            <button type="button" class="qtype-btn active" id="create-type-mc" onclick="setQType('create','multiple_choice')">☑ Multiple Choice</button>
+            <button type="button" class="qtype-btn" id="create-type-essay" onclick="setQType('create','essay')">✏️ Essay</button>
+          </div>
+          <input type="hidden" name="question_type" id="create-question-type" value="multiple_choice">
+        </div>
+
+        <div class="field-group full">
+          <label class="field-label">Question</label>
+          <textarea class="field-textarea" name="question_text" required placeholder="Write your question here…"></textarea>
+        </div>
+
+        <div id="create-mc-fields" class="full" style="display:contents">
+          <div class="options-grid full">
+            {% for opt in ['A','B','C','D'] %}
+            <div class="field-group option-wrap">
+              <div class="option-prefix">{{ opt }}</div>
+              <input class="field-input" name="option_{{ opt|lower }}" placeholder="Option {{ opt }}">
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Correct Answer</label>
+            <select class="field-select" name="correct_answer">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="create-essay-fields" class="field-group full" style="display:none">
+          <label class="field-label">Model Answer <span>(kunci jawaban — ditampilkan ke siswa setelah submit)</span></label>
+          <textarea class="field-textarea" name="essay_answer" placeholder="Tulis kunci jawaban / model answer di sini…" style="min-height:100px"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Difficulty</label>
+          <select class="field-select" name="difficulty" required>
+            <option value="very_easy">Very Easy</option>
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+            <option value="very_hard">Very Hard</option>
+          </select>
+        </div>
+
+        <div class="field-group full">
+          <label class="field-label">Topic <span>(optional)</span></label>
+          <input class="field-input" name="topic" placeholder="e.g. Math, Science…">
+        </div>
+
+        <!-- Translations -->
+        <div class="field-group full">
+          <div class="lang-toggle" onclick="toggleLangSection('create')">
+            <span>🌐</span>
+            <span class="lang-toggle-lbl">Translations (optional — English &amp; Malay)</span>
+            <span class="lang-toggle-arrow" id="create-lang-arrow">▼</span>
+          </div>
+          <div class="lang-body" id="create-lang-body">
+            <div class="lang-tabs-row">
+              <button type="button" class="ltab active" onclick="switchLangTab('create','en')">🇬🇧 English</button>
+              <button type="button" class="ltab" onclick="switchLangTab('create','my')">🇲🇾 Malay</button>
+            </div>
+            <div class="lang-panel active" id="create-lang-en">
+              <div class="form-grid" style="margin-bottom:10px">
+                <div class="field-group full">
+                  <label class="field-label">Question <span>(EN)</span></label>
+                  <textarea class="field-textarea" name="question_text_en" placeholder="Question in English…" style="min-height:70px"></textarea>
+                </div>
+                <div class="options-grid full">
+                  {% for opt in ['a','b','c','d'] %}
+                  <div class="field-group option-wrap">
+                    <div class="option-prefix">{{ opt|upper }}</div>
+                    <input class="field-input" name="option_{{ opt }}_en" placeholder="Option {{ opt|upper }} (EN)">
+                  </div>
+                  {% endfor %}
+                </div>
+                <div class="field-group full">
+                  <label class="field-label">Topic <span>(EN, optional)</span></label>
+                  <input class="field-input" name="topic_en" placeholder="e.g. Math, Science…">
+                </div>
+              </div>
+            </div>
+            <div class="lang-panel" id="create-lang-my">
+              <div class="form-grid" style="margin-bottom:10px">
+                <div class="field-group full">
+                  <label class="field-label">Soalan <span>(MY)</span></label>
+                  <textarea class="field-textarea" name="question_text_my" placeholder="Soalan dalam Bahasa Melayu…" style="min-height:70px"></textarea>
+                </div>
+                <div class="options-grid full">
+                  {% for opt in ['a','b','c','d'] %}
+                  <div class="field-group option-wrap">
+                    <div class="option-prefix">{{ opt|upper }}</div>
+                    <input class="field-input" name="option_{{ opt }}_my" placeholder="Pilihan {{ opt|upper }} (MY)">
+                  </div>
+                  {% endfor %}
+                </div>
+                <div class="field-group full">
+                  <label class="field-label">Topik <span>(MY, optional)</span></label>
+                  <input class="field-input" name="topic_my" placeholder="cth. Matematik, Sains…">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video / Image -->
+        <div class="field-group full video-section">
+          <label class="field-label">Media <span>(optional — YouTube, video, or image)</span></label>
+          <input type="hidden" name="video_source" id="videoSourceInput" value="">
+
+          <div class="video-tabs">
+            <button type="button" class="vtab" id="tabNone" onclick="setVideoSource('none')" data-i18n="media_none">No Media</button>
+            <button type="button" class="vtab" id="tabYoutube" onclick="setVideoSource('youtube')" data-i18n="media_youtube">🎬 YouTube URL</button>
+            <button type="button" class="vtab" id="tabUpload" onclick="setVideoSource('upload')" data-i18n="media_upload">📁 Upload File</button>
+          </div>
+
+          <div class="video-area" id="areaYoutube">
+            <input class="field-input" type="url" name="youtube_url" id="youtubeUrlInput"
+              placeholder="https://www.youtube.com/watch?v=…" oninput="previewYoutube(this.value)">
+            <div class="video-preview" id="previewYt">
+              <iframe id="ytFrame" src="" allowfullscreen allow="autoplay"></iframe>
+            </div>
+          </div>
+
+          <div class="video-area" id="areaUpload">
+            <div class="drop-zone" id="dropZone"
+              onclick="document.getElementById('videoFileInput').click()"
+              ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+              <div class="dz-icon" id="dropIcon">🎥</div>
+              <div class="dz-title" id="dropTitle">Click or drag &amp; drop here</div>
+              <div class="dz-desc" id="dropDesc">Video: MP4, WebM, OGG, MOV · Image: JPG, PNG, GIF, WebP · Max 200 MB</div>
+              <input type="file" id="videoFileInput" name="video_file"
+                accept=".mp4,.webm,.ogg,.mov,.jpg,.jpeg,.png,.gif,.webp,video/*,image/*"
+                onchange="previewUpload(this)">
+            </div>
+            <div class="video-preview" id="previewUp"><video id="uploadedVideo" controls></video></div>
+            <div class="image-preview" id="previewImg"><img id="uploadedImage" src="" alt="Preview"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="submit-row">
+        <button class="btn-submit" type="submit" data-i18n="btn_add_q">➕ Add Question</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Question List -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-icon cyan">📋</div>
+      <div>
+        <div class="panel-title" data-i18n="lbl_questions_list">Question List</div>
+        <div class="panel-sub" data-i18n="msg_click_media">Click a media badge to preview.</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <span class="filter-label" data-i18n="lbl_filter">Filter:</span>
+      <a class="filter-pill {% if not selected_difficulty %}active{% endif %}" href="/teacher/questions" data-i18n="misc_all">All</a>
+      <a class="filter-pill {% if selected_difficulty=='very_easy' %}active{% endif %}" href="/teacher/questions?difficulty=very_easy" data-i18n="diff_very_easy">Very Easy</a>
+      <a class="filter-pill {% if selected_difficulty=='easy' %}active{% endif %}" href="/teacher/questions?difficulty=easy" data-i18n="diff_easy">Easy</a>
+      <a class="filter-pill {% if selected_difficulty=='medium' %}active{% endif %}" href="/teacher/questions?difficulty=medium" data-i18n="diff_medium">Medium</a>
+      <a class="filter-pill {% if selected_difficulty=='hard' %}active{% endif %}" href="/teacher/questions?difficulty=hard" data-i18n="diff_hard">Hard</a>
+      <a class="filter-pill {% if selected_difficulty=='very_hard' %}active{% endif %}" href="/teacher/questions?difficulty=very_hard" data-i18n="diff_very_hard">Very Hard</a>
+    </div>
+
+    {% if questions %}
+    <div class="q-count">Showing <strong>{{ questions|length }}</strong> question(s){% if selected_difficulty %} · difficulty: <strong>{{ selected_difficulty }}</strong>{% endif %}</div>
+    <div class="q-list">
+      {% for q in questions %}
+      <div class="q-card">
+        <div class="q-card-top">
+          <div class="q-text"
+               data-text-id="{{ q.question_text }}"
+               data-text-en="{{ q.question_text_en or q.question_text }}"
+               data-text-my="{{ q.question_text_my or q.question_text }}">{{ q.question_text }}</div>
+          <div style="display:flex;gap:7px;flex-shrink:0">
+            <button type="button" class="btn-edit" onclick="openEditModal({{ q.id }})">✏️ Edit</button>
+            <form action="/teacher/questions/delete/{{ q.id }}" method="POST"
+                  onsubmit="return confirm('Delete this question?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-del">🗑 Delete</button>
+            </form>
+          </div>
+        </div>
+        <div class="q-card-meta">
+          <span class="diff-badge diff-{{ q.difficulty }}">{{ q.difficulty|replace('_',' ')|title }}</span>
+          {% if q.question_type == 'essay' %}
+          <span class="q-badge" style="background:#f0fdf4;color:#166534;border-color:#86efac">✏️ Essay</span>
+          {% else %}
+          <span class="q-badge correct">✓ {{ q.correct_answer }}</span>
+          {% endif %}
+          {% if q.topic %}
+          <span class="q-badge topic">📌 {{ q.topic }}</span>
+          {% endif %}
+          {% if q.video_type == 'youtube' %}
+            <button type="button" class="q-badge vid-yt" onclick="openVideoModal('youtube','{{ q.video_url }}')">▶ YouTube</button>
+          {% elif q.video_type == 'upload' %}
+            <button type="button" class="q-badge vid-up" onclick="openVideoModal('upload','{{ q.video_url }}')">▶ Video</button>
+          {% elif q.video_type == 'image' %}
+            <button type="button" class="q-badge vid-img" onclick="openVideoModal('image','{{ q.video_url }}')">🖼 Image</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      <span class="empty-icon">📭</span>
+      <span data-i18n="msg_no_questions">No questions yet</span>{% if selected_difficulty %} for difficulty <strong>{{ selected_difficulty }}</strong>{% endif %}.
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Edit Modal -->
+<div class="edit-overlay" id="editOverlay" onclick="maybeCloseEdit(event)">
+  <div class="edit-modal" id="editModal">
+    <div class="edit-modal-head">
+      <div class="edit-modal-title">✏️ Edit Question</div>
+      <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="edit-modal-body">
+      <form id="editForm" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+
+          <div class="field-group full">
+            <label class="field-label">Question Type</label>
+            <div style="display:flex;gap:10px">
+              <button type="button" class="qtype-btn active" id="edit-type-mc" onclick="setQType('edit','multiple_choice')">☑ Multiple Choice</button>
+              <button type="button" class="qtype-btn" id="edit-type-essay" onclick="setQType('edit','essay')">✏️ Essay</button>
+            </div>
+            <input type="hidden" name="question_type" id="edit-question-type" value="multiple_choice">
+          </div>
+
+          <div class="field-group full">
+            <label class="field-label">Question</label>
+            <textarea class="field-textarea" name="question_text" id="edit_question_text" required></textarea>
+          </div>
+
+          <div id="edit-mc-fields" class="full" style="display:contents">
+            <div class="options-grid full">
+              {% for opt in ['A','B','C','D'] %}
+              <div class="field-group option-wrap">
+                <div class="option-prefix">{{ opt }}</div>
+                <input class="field-input" name="option_{{ opt|lower }}" id="edit_option_{{ opt|lower }}" placeholder="Option {{ opt }}">
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Correct Answer</label>
+              <select class="field-select" name="correct_answer" id="edit_correct_answer">
+                <option value="A">A</option><option value="B">B</option>
+                <option value="C">C</option><option value="D">D</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="edit-essay-fields" class="field-group full" style="display:none">
+            <label class="field-label">Model Answer <span>(shown to student after submit)</span></label>
+            <textarea class="field-textarea" name="essay_answer" id="edit_essay_answer" placeholder="Write model answer here…" style="min-height:100px"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Difficulty</label>
+            <select class="field-select" name="difficulty" id="edit_difficulty">
+              <option value="very_easy">Very Easy</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+              <option value="very_hard">Very Hard</option>
+            </select>
+          </div>
+
+          <div class="field-group full">
+            <label class="field-label">Topic <span>(optional)</span></label>
+            <input class="field-input" name="topic" id="edit_topic" placeholder="e.g. Math, Science…">
+          </div>
+
+          <!-- Edit Translations -->
+          <div class="field-group full">
+            <div class="lang-toggle" onclick="toggleLangSection('edit')">
+              <span>🌐</span>
+              <span class="lang-toggle-lbl">Translations (optional — English &amp; Malay)</span>
+              <span class="lang-toggle-arrow" id="edit-lang-arrow">▼</span>
+            </div>
+            <div class="lang-body" id="edit-lang-body">
+              <div class="lang-tabs-row">
+                <button type="button" class="ltab active" onclick="switchLangTab('edit','en')">🇬🇧 English</button>
+                <button type="button" class="ltab" onclick="switchLangTab('edit','my')">🇲🇾 Malay</button>
+              </div>
+              <div class="lang-panel active" id="edit-lang-en">
+                <div class="form-grid" style="margin-bottom:10px">
+                  <div class="field-group full">
+                    <label class="field-label">Question <span>(EN)</span></label>
+                    <textarea class="field-textarea" name="question_text_en" id="edit_question_text_en" placeholder="Question in English…" style="min-height:70px"></textarea>
+                  </div>
+                  <div class="options-grid full">
+                    {% for opt in ['a','b','c','d'] %}
+                    <div class="field-group option-wrap">
+                      <div class="option-prefix">{{ opt|upper }}</div>
+                      <input class="field-input" name="option_{{ opt }}_en" id="edit_option_{{ opt }}_en" placeholder="Option {{ opt|upper }} (EN)">
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <div class="field-group full">
+                    <label class="field-label">Topic <span>(EN, optional)</span></label>
+                    <input class="field-input" name="topic_en" id="edit_topic_en" placeholder="e.g. Math, Science…">
+                  </div>
+                </div>
+              </div>
+              <div class="lang-panel" id="edit-lang-my">
+                <div class="form-grid" style="margin-bottom:10px">
+                  <div class="field-group full">
+                    <label class="field-label">Soalan <span>(MY)</span></label>
+                    <textarea class="field-textarea" name="question_text_my" id="edit_question_text_my" placeholder="Soalan dalam Bahasa Melayu…" style="min-height:70px"></textarea>
+                  </div>
+                  <div class="options-grid full">
+                    {% for opt in ['a','b','c','d'] %}
+                    <div class="field-group option-wrap">
+                      <div class="option-prefix">{{ opt|upper }}</div>
+                      <input class="field-input" name="option_{{ opt }}_my" id="edit_option_{{ opt }}_my" placeholder="Pilihan {{ opt|upper }} (MY)">
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <div class="field-group full">
+                    <label class="field-label">Topik <span>(MY, optional)</span></label>
+                    <input class="field-input" name="topic_my" id="edit_topic_my" placeholder="cth. Matematik, Sains…">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group full video-section">
+            <label class="field-label">Media <span>(optional)</span></label>
+            <input type="hidden" name="video_source" id="edit_videoSourceInput" value="">
+            <div class="video-tabs">
+              <button type="button" class="vtab" id="edit_tabNone"   onclick="editSetVideoSource('none')" data-i18n="media_none">No Media</button>
+              <button type="button" class="vtab" id="edit_tabYoutube" onclick="editSetVideoSource('youtube')" data-i18n="media_youtube">🎬 YouTube URL</button>
+              <button type="button" class="vtab" id="edit_tabUpload"  onclick="editSetVideoSource('upload')" data-i18n="media_upload">📁 Upload File</button>
+            </div>
+            <div class="video-area" id="edit_areaYoutube">
+              <input class="field-input" type="url" name="youtube_url" id="edit_youtubeUrl"
+                placeholder="https://www.youtube.com/watch?v=…" oninput="editPreviewYoutube(this.value)">
+              <div class="video-preview" id="edit_previewYt">
+                <iframe id="edit_ytFrame" src="" allowfullscreen allow="autoplay"></iframe>
+              </div>
+            </div>
+            <div class="video-area" id="edit_areaUpload">
+              <div id="edit_currentMedia" style="display:none;margin-bottom:10px;padding:10px 14px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;font-size:12px;font-weight:700;color:#0369a1">
+                📎 Current media attached — upload a new file to replace it
+              </div>
+              <div class="drop-zone" id="edit_dropZone"
+                onclick="document.getElementById('edit_videoFileInput').click()"
+                ondragover="onDragOver2(event)" ondragleave="onDragLeave2(event)" ondrop="onDrop2(event)">
+                <div class="dz-icon" id="edit_dropIcon">🎥</div>
+                <div class="dz-title" id="edit_dropTitle">Click or drag &amp; drop here</div>
+                <div class="dz-desc" id="edit_dropDesc">Video: MP4, WebM · Image: JPG, PNG · Max 200 MB</div>
+                <input type="file" id="edit_videoFileInput" name="video_file"
+                  accept=".mp4,.webm,.ogg,.mov,.jpg,.jpeg,.png,.gif,.webp,video/*,image/*"
+                  onchange="editPreviewUpload(this)">
+              </div>
+              <div class="video-preview" id="edit_previewUp"><video id="edit_uploadedVideo" controls></video></div>
+              <div class="image-preview" id="edit_previewImg"><img id="edit_uploadedImage" src="" alt="Preview"></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="submit-row">
+          <button class="btn-submit" type="submit" data-i18n="btn_save_q">💾 Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Video / Image Modal -->
+<div class="vid-modal-overlay" id="videoModal" onclick="closeVideoModal(event)">
+  <div class="vid-modal" id="vidModalBox">
+    <button class="vid-modal-close" onclick="closeVideoModal()">✕</button>
+    <iframe id="modalIframe" src="" allowfullscreen allow="autoplay" style="display:none;width:100%;height:100%"></iframe>
+    <video id="modalVideo" controls style="display:none;width:100%;height:100%"></video>
+    <img id="modalImage" src="" style="display:none;max-width:100%;max-height:100%;object-fit:contain;padding:16px">
+  </div>
+</div>
+
+<script>
+function setVideoSource(src) {
+  document.getElementById('videoSourceInput').value = src === 'none' ? '' : src;
+  ['None','Youtube','Upload'].forEach(s => {
+    document.getElementById('tab' + s).classList.toggle('active', s.toLowerCase() === src);
+  });
+  document.getElementById('areaYoutube').classList.toggle('active', src === 'youtube');
+  document.getElementById('areaUpload').classList.toggle('active', src === 'upload');
+  if (src !== 'youtube') {
+    document.getElementById('previewYt').style.display = 'none';
+    document.getElementById('ytFrame').src = '';
+    document.getElementById('youtubeUrlInput').value = '';
+  }
+  if (src !== 'upload') {
+    document.getElementById('previewUp').style.display = 'none';
+    document.getElementById('uploadedVideo').src = '';
+    document.getElementById('videoFileInput').value = '';
+    document.getElementById('previewImg').style.display = 'none';
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  setVideoSource('none');
+  applyQListLang(getLang());
+});
+
+window.addEventListener('langchange', e => applyQListLang(e.detail));
+
+function applyQListLang(lang) {
+  document.querySelectorAll('.q-text[data-text-id]').forEach(el => {
+    el.textContent = el.dataset['text' + lang.charAt(0).toUpperCase() + lang.slice(1)]
+                     || el.dataset.textId;
+  });
+}
+
+function extractYouTubeId(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('?')[0];
+    return u.searchParams.get('v') || '';
+  } catch { return ''; }
+}
+
+function previewYoutube(url) {
+  const id = extractYouTubeId(url);
+  const preview = document.getElementById('previewYt');
+  const frame   = document.getElementById('ytFrame');
+  if (id) { frame.src = `https://www.youtube.com/embed/${id}`; preview.style.display = 'block'; }
+  else    { preview.style.display = 'none'; frame.src = ''; }
+}
+
+function previewUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const isImage = file.type.startsWith('image/');
+  const url = URL.createObjectURL(file);
+  document.getElementById('previewUp').style.display = 'none';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('dropDesc').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+  if (isImage) {
+    document.getElementById('uploadedImage').src = url;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('dropIcon').textContent = '🖼️';
+    document.getElementById('dropTitle').textContent = file.name;
+  } else {
+    document.getElementById('uploadedVideo').src = url;
+    document.getElementById('previewUp').style.display = 'block';
+    document.getElementById('dropIcon').textContent = '🎥';
+    document.getElementById('dropTitle').textContent = file.name;
+  }
+}
+
+function onDragOver(e)  { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+function onDragLeave(e) { document.getElementById('dropZone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && (file.type.startsWith('video/') || file.type.startsWith('image/'))) {
+    const input = document.getElementById('videoFileInput');
+    const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+    previewUpload(input);
+  }
+}
+
+// ── Edit modal ──────────────────────────────────────
+function validateQForm(form) {
+  const type = form.querySelector('[name="question_type"]')?.value || 'multiple_choice';
+  if (type === 'multiple_choice') {
+    const opts = ['option_a','option_b','option_c','option_d'];
+    for (const name of opts) {
+      if (!form.querySelector(`[name="${name}"]`)?.value.trim()) {
+        alert('Please fill in all 4 answer options.');
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function setQType(prefix, type) {
+  const isEssay = type === 'essay';
+  document.getElementById(`${prefix}-question-type`).value = type;
+  document.getElementById(`${prefix}-type-mc`).classList.toggle('active', !isEssay);
+  document.getElementById(`${prefix}-type-essay`).classList.toggle('active', isEssay);
+  const mcFields = document.getElementById(`${prefix}-mc-fields`);
+  if (mcFields) mcFields.style.display = isEssay ? 'none' : 'contents';
+  const essayFields = document.getElementById(`${prefix}-essay-fields`);
+  if (essayFields) essayFields.style.display = isEssay ? 'block' : 'none';
+}
+
+function toggleLangSection(prefix) {
+  const body  = document.getElementById(`${prefix}-lang-body`);
+  const arrow = document.getElementById(`${prefix}-lang-arrow`);
+  const open  = body.classList.toggle('open');
+  arrow.textContent = open ? '▲' : '▼';
+}
+
+function switchLangTab(prefix, lang) {
+  ['en','my'].forEach(l => {
+    document.getElementById(`${prefix}-lang-${l}`).classList.toggle('active', l === lang);
+  });
+  document.querySelectorAll(`#${prefix}-lang-body .ltab`).forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && lang === 'en') || (i === 1 && lang === 'my'));
+  });
+}
+
+async function openEditModal(id) {
+  const res  = await fetch(`/teacher/questions/edit/${id}`);
+  const q    = await res.json();
+  document.getElementById('editForm').action = `/teacher/questions/edit/${id}`;
+  document.getElementById('edit_question_text').value  = q.question_text || '';
+  document.getElementById('edit_option_a').value       = q.option_a || '';
+  document.getElementById('edit_option_b').value       = q.option_b || '';
+  document.getElementById('edit_option_c').value       = q.option_c || '';
+  document.getElementById('edit_option_d').value       = q.option_d || '';
+  document.getElementById('edit_correct_answer').value = q.correct_answer || 'A';
+  document.getElementById('edit_difficulty').value     = q.difficulty || 'medium';
+  document.getElementById('edit_topic').value          = q.topic || '';
+  document.getElementById('edit_essay_answer').value   = q.essay_answer || '';
+  setQType('edit', q.question_type || 'multiple_choice');
+
+  // Populate translation fields
+  document.getElementById('edit_question_text_en').value = q.question_text_en || '';
+  document.getElementById('edit_question_text_my').value = q.question_text_my || '';
+  ['a','b','c','d'].forEach(o => {
+    document.getElementById(`edit_option_${o}_en`).value = q[`option_${o}_en`] || '';
+    document.getElementById(`edit_option_${o}_my`).value = q[`option_${o}_my`] || '';
+  });
+  document.getElementById('edit_topic_en').value = q.topic_en || '';
+  document.getElementById('edit_topic_my').value = q.topic_my || '';
+
+  // Auto-open translation section if any translation exists
+  const hasTranslation = q.question_text_en || q.question_text_my;
+  if (hasTranslation) {
+    const body = document.getElementById('edit-lang-body');
+    if (!body.classList.contains('open')) toggleLangSection('edit');
+  }
+
+  if (q.video_type === 'youtube') {
+    editSetVideoSource('youtube');
+    document.getElementById('edit_youtubeUrl').value = q.video_url || '';
+    editPreviewYoutube(q.video_url || '');
+  } else if (q.video_type === 'upload' || q.video_type === 'image') {
+    editSetVideoSource('upload');
+    document.getElementById('edit_currentMedia').style.display = 'block';
+  } else {
+    editSetVideoSource('none');
+  }
+
+  document.getElementById('editOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+  document.getElementById('editOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  document.getElementById('edit_ytFrame').src = '';
+  document.getElementById('edit_previewYt').style.display = 'none';
+  document.getElementById('edit_previewUp').style.display = 'none';
+  document.getElementById('edit_previewImg').style.display = 'none';
+  document.getElementById('edit_currentMedia').style.display = 'none';
+}
+
+function maybeCloseEdit(e) {
+  if (e.target === document.getElementById('editOverlay')) closeEditModal();
+}
+
+function editSetVideoSource(src) {
+  document.getElementById('edit_videoSourceInput').value = src === 'none' ? '' : src;
+  ['None','Youtube','Upload'].forEach(s => {
+    document.getElementById('edit_tab' + s).classList.toggle('active', s.toLowerCase() === src);
+  });
+  document.getElementById('edit_areaYoutube').classList.toggle('active', src === 'youtube');
+  document.getElementById('edit_areaUpload').classList.toggle('active',  src === 'upload');
+  if (src !== 'youtube') {
+    document.getElementById('edit_previewYt').style.display = 'none';
+    document.getElementById('edit_ytFrame').src = '';
+    document.getElementById('edit_youtubeUrl').value = '';
+  }
+  if (src !== 'upload') {
+    document.getElementById('edit_previewUp').style.display = 'none';
+    document.getElementById('edit_previewImg').style.display = 'none';
+    document.getElementById('edit_uploadedVideo').src = '';
+    document.getElementById('edit_videoFileInput').value = '';
+    document.getElementById('edit_currentMedia').style.display = 'none';
+  }
+}
+
+function editPreviewYoutube(url) {
+  const id = extractYouTubeId(url);
+  const preview = document.getElementById('edit_previewYt');
+  const frame   = document.getElementById('edit_ytFrame');
+  if (id) { frame.src = `https://www.youtube.com/embed/${id}`; preview.style.display = 'block'; }
+  else    { preview.style.display = 'none'; frame.src = ''; }
+}
+
+function editPreviewUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const isImage = file.type.startsWith('image/');
+  const url = URL.createObjectURL(file);
+  document.getElementById('edit_previewUp').style.display = 'none';
+  document.getElementById('edit_previewImg').style.display = 'none';
+  document.getElementById('edit_dropDesc').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+  if (isImage) {
+    document.getElementById('edit_uploadedImage').src = url;
+    document.getElementById('edit_previewImg').style.display = 'block';
+  } else {
+    document.getElementById('edit_uploadedVideo').src = url;
+    document.getElementById('edit_previewUp').style.display = 'block';
+  }
+}
+
+function onDragOver2(e)  { e.preventDefault(); document.getElementById('edit_dropZone').classList.add('dragover'); }
+function onDragLeave2(e) { document.getElementById('edit_dropZone').classList.remove('dragover'); }
+function onDrop2(e) {
+  e.preventDefault();
+  document.getElementById('edit_dropZone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && (file.type.startsWith('video/') || file.type.startsWith('image/'))) {
+    const input = document.getElementById('edit_videoFileInput');
+    const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+    editPreviewUpload(input);
+  }
+}
+
+function openVideoModal(type, url) {
+  const modal = document.getElementById('videoModal');
+  const box   = document.getElementById('vidModalBox');
+  const iframe = document.getElementById('modalIframe');
+  const video  = document.getElementById('modalVideo');
+  const image  = document.getElementById('modalImage');
+  iframe.style.display = video.style.display = image.style.display = 'none';
+  if (type === 'youtube') {
+    iframe.src = `https://www.youtube.com/embed/${extractYouTubeId(url)}?autoplay=1`;
+    iframe.style.display = 'block';
+    box.style.aspectRatio = '16/9'; box.style.background = '#000';
+  } else if (type === 'image') {
+    image.src = `/static/${url}`;
+    image.style.display = 'block';
+    box.style.aspectRatio = 'auto'; box.style.background = '#111';
+    box.style.display = 'flex'; box.style.alignItems = 'center'; box.style.justifyContent = 'center';
+  } else {
+    video.src = `/static/${url}`; video.style.display = 'block';
+    box.style.aspectRatio = '16/9'; box.style.background = '#000';
+    video.play();
+  }
+  modal.classList.add('open');
+}
+
+function closeVideoModal(e) {
+  if (e && e.target !== document.getElementById('videoModal')) return;
+  document.getElementById('videoModal').classList.remove('open');
+  document.getElementById('modalIframe').src = '';
+  const v = document.getElementById('modalVideo'); v.pause(); v.src = '';
+  document.getElementById('modalImage').src = '';
+}
+</script>
+</body>
+</html>

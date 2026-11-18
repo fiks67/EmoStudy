@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emotion Groups — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh}
+
+.header{
+  background:linear-gradient(135deg,#0c4a6e 0%,#312e81 100%);
+  padding:0 28px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);
+  position:sticky;top:0;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}
+.logo-icon{background:linear-gradient(135deg,#0ea5e9,#7c3aed);width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 10px rgba(14,165,233,.4)}
+.nav-tabs{display:flex;gap:6px}
+.nav-tab{padding:8px 16px;border-radius:20px;text-decoration:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-tab.logout{background:rgba(255,255,255,.12)}
+.nav-tab.logout:hover{background:rgba(239,68,68,.25);color:#fca5a5}
+
+.main{max-width:1200px;margin:0 auto;padding:28px 24px}
+
+/* Hero */
+.page-hero{
+  background:linear-gradient(135deg,#0284c7 0%,#7c3aed 100%);
+  border-radius:24px;padding:26px 30px;color:#fff;margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.page-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.page-hero::after{content:'';position:absolute;bottom:-40px;right:90px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
+.hero-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.hero-title{font-size:21px;font-weight:900;letter-spacing:-.3px}
+.hero-sub{font-size:13px;opacity:.7;font-weight:600;margin-top:5px}
+.live-pill{
+  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);
+  padding:8px 16px;border-radius:14px;font-size:12px;font-weight:800;
+  display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;position:relative;
+}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:ldot 1.5s infinite}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Hero emotion summary */
+.hero-emotion-grid{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.hem{
+  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);
+  border-radius:16px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.hem-icon{font-size:22px;line-height:1;flex-shrink:0}
+.hem-num{font-size:24px;font-weight:900;line-height:1}
+.hem-info{display:flex;flex-direction:column;gap:1px}
+.hem-lbl{font-size:10px;opacity:.65;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.hem-pct{font-size:11px;opacity:.6;font-weight:700}
+
+/* No session */
+.no-session-card{
+  background:#fff;border-radius:22px;padding:48px 32px;
+  text-align:center;border:1.5px solid #e2e8f0;
+  box-shadow:0 2px 14px rgba(0,0,0,.05);
+}
+.ns-icon{font-size:48px;margin-bottom:16px;display:block}
+.ns-title{font-size:18px;font-weight:900;color:#0f172a;margin-bottom:8px}
+.ns-sub{font-size:14px;color:#94a3b8;font-weight:600}
+.ns-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  text-decoration:none;margin-top:20px;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;border-radius:13px;padding:12px 24px;
+  font-size:14px;font-weight:900;font-family:inherit;
+  box-shadow:0 4px 16px rgba(14,165,233,.3);transition:.18s;
+}
+.ns-btn:hover{opacity:.9;box-shadow:0 6px 20px rgba(14,165,233,.4);transform:translateY(-2px)}
+
+/* Group cards */
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:18px}
+.group-card{border-radius:22px;overflow:hidden;border:1.5px solid;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.05);transition:.2s}
+.group-card:hover{transform:translateY(-3px)}
+
+.group-card.happy{border-color:#fde68a}
+.group-card.engaged{border-color:#6ee7b7}
+.group-card.confused{border-color:#fed7aa}
+.group-card.frustrated{border-color:#fca5a5}
+
+.gc-header{padding:18px 20px;position:relative;overflow:hidden}
+.gc-header.happy{background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+.gc-header.engaged{background:linear-gradient(135deg,#ecfdf5,#d1fae5)}
+.gc-header.confused{background:linear-gradient(135deg,#fff7ed,#ffedd5)}
+.gc-header.frustrated{background:linear-gradient(135deg,#fef2f2,#fee2e2)}
+.gc-header-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gc-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:900;border:1.5px solid}
+.gc-badge.happy{background:#fffbeb;color:#92400e;border-color:#f59e0b}
+.gc-badge.engaged{background:#ecfdf5;color:#065f46;border-color:#10b981}
+.gc-badge.confused{background:#fff7ed;color:#7c2d12;border-color:#f97316}
+.gc-badge.frustrated{background:#fef2f2;color:#7f1d1d;border-color:#ef4444}
+.gc-count{font-size:12px;font-weight:800;color:#64748b}
+
+.gc-body{padding:16px 18px 18px}
+
+/* Difficulty badge (read-only) */
+.diff-badge-wrap{margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.diff-adj-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.diff-adj-btn{
+  padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;
+  border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.diff-adj-btn:hover{border-color:#7c3aed;color:#5b21b6;background:#fdf4ff}
+.diff-adj-btn.active{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-color:#7c3aed}
+.diff-adj-btn:disabled{opacity:.5;cursor:not-allowed}
+.diff-badge-lbl{font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px}
+.diff-badge{display:inline-flex;align-items:center;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:900;border:1.5px solid}
+.diff-badge.very_easy{background:#ecfdf5;color:#065f46;border-color:#6ee7b7}
+.diff-badge.easy{background:#f0fdf4;color:#166534;border-color:#86efac}
+.diff-badge.medium{background:#fffbeb;color:#92400e;border-color:#fcd34d}
+.diff-badge.hard{background:#fef2f2;color:#7f1d1d;border-color:#fca5a5}
+.diff-badge.very_hard{background:#4c0519;color:#fda4af;border-color:#9f1239}
+
+/* Divider */
+.gc-divider{border:none;border-top:1.5px solid #f1f5f9;margin:0 0 12px}
+
+/* Student items */
+.student-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1.5px solid #f8fafc;
+}
+.student-item:last-child{border-bottom:none}
+.st-avatar{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+}
+.st-name{font-weight:800;font-size:13px;color:#0f172a;line-height:1.2}
+.st-meta{font-size:11px;color:#94a3b8;font-weight:600;margin-top:2px}
+.inactive-chip{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10px;font-weight:800;color:#94a3b8;
+  background:#f1f5f9;border:1.5px solid #e2e8f0;
+  border-radius:6px;padding:2px 6px;
+  vertical-align:middle;margin-left:5px;
+}
+.st-name.faded{opacity:.45}
+
+.empty-group{
+  text-align:center;padding:20px 12px;
+  font-size:12px;color:#94a3b8;font-weight:700;
+  border:2px dashed #f1f5f9;border-radius:12px;
+  background:#f8fafc;
+}
+
+@media(max-width:900px){.groups-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.hero-emotion-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){
+  .header{padding:0 16px}
+  .logo{font-size:14px}
+  .nav-tab{padding:7px 10px;font-size:12px}
+  .main{padding:18px 16px}
+  .page-hero{padding:20px}
+  .hero-title{font-size:17px}
+  .groups-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .logo-lbl{display:none}
+  .tab-lbl{display:none}
+  .nav-tab{padding:8px 10px}
+  .main{padding:14px 12px}
+  .page-hero{padding:16px}
+  .panel{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-icon">🎓</div><span class="logo-lbl"> Emotion Learning</span></div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/teacher">🏠<span class="tab-lbl" data-i18n="nav_dashboard"> Dashboard</span></a>
+    <a class="nav-tab" href="/teacher/class/{{ class_id }}">←<span class="tab-lbl" data-i18n="btn_back"> Back</span></a>
+    <a class="nav-tab logout" href="/logout">🚪<span class="tab-lbl" data-i18n="btn_sign_out"> Sign Out</span></a>
+  </div>
+</div>
+
+<div class="main">
+
+  {% if not active_session %}
+
+    <div class="page-hero" style="margin-bottom:24px">
+      <div class="hero-top">
+        <div>
+          <div class="hero-title" data-i18n="lbl_emotion_groups">😊 Emotion Groups</div>
+          <div class="hero-sub" data-i18n="msg_emotions_sub">Student groups based on real-time emotion detection.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-session-card">
+      <span class="ns-icon">😴</span>
+      <div class="ns-title" data-i18n="status_no_session">No active session</div>
+      <div class="ns-sub" data-i18n="msg_start_session">Start a session from the classroom page to view emotion groups.</div>
+      <a class="ns-btn" href="/teacher/class/{{ class_id }}" data-i18n="btn_open_class">🖥️ Open Classroom</a>
+    </div>
+
+  {% else %}
+
+    <div class="page-hero">
+      <div class="hero-top">
+        <div>
+          <div class="hero-title" data-i18n="lbl_emotion_groups">😊 Emotion Groups</div>
+          <div class="hero-sub">
+            Session: <strong>{{ active_session.session_name }}</strong> &nbsp;·&nbsp;
+            <span id="total-detected">{{ total }}</span> <span data-i18n="misc_students_detected">students detected</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <button id="btn-next-round" onclick="startNextRound()"
+            style="display:none;border:none;border-radius:13px;padding:10px 22px;
+                   background:linear-gradient(135deg,#10b981,#0ea5e9);color:#fff;
+                   font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
+                   box-shadow:0 4px 14px rgba(16,185,129,.35);transition:.18s;">
+            ▶ <span data-i18n="btn_next_round">Next Round</span>
+          </button>
+          <div class="live-pill">
+            <span class="live-dot"></span>
+            <span id="live-status" data-i18n="status_connecting">Connecting…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-emotion-grid">
+        {% set icons = {'Happy':'😊','Engaged':'🙂','Confused':'😕','Frustrated':'😤'} %}
+        {% for cat in ['Happy','Engaged','Confused','Frustrated'] %}
+        {% set s = summary.get(cat, {'count':0,'percentage':0,'difficulty':'medium'}) %}
+        <div class="hem" data-summary-cat="{{ cat }}">
+          <div class="hem-icon">{{ icons[cat] }}</div>
+          <div class="hem-info">
+            <div class="hem-num" data-summary-count="{{ cat }}">{{ s.count }}</div>
+            <div class="hem-lbl" data-i18n="emotion_{{ cat|lower }}">{{ cat }}</div>
+            <div class="hem-pct"><span data-summary-percentage="{{ cat }}">{{ s.percentage }}</span>%</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="groups-grid">
+      {% set cls_map = {'Happy':'happy','Engaged':'engaged','Confused':'confused','Frustrated':'frustrated'} %}
+      {% for cat in ['Happy','Engaged','Confused','Frustrated'] %}
+        {% set students = groups.get(cat, []) %}
+        {% set s = summary.get(cat, {'difficulty':'medium'}) %}
+        {% set cls = cls_map[cat] %}
+        <div class="group-card {{ cls }}" data-group-card="{{ cat }}">
+
+          <div class="gc-header {{ cls }}">
+            <div class="gc-header-top">
+              <span class="gc-badge {{ cls }}">{{ icons[cat] }} <span data-i18n="emotion_{{ cat|lower }}">{{ cat }}</span></span>
+              <span class="gc-count" data-group-count="{{ cat }}">{{ students|length }} <span data-i18n="lbl_students">Students</span></span>
+            </div>
+          </div>
+
+          <div class="gc-body">
+            <div class="diff-badge-wrap">
+              <span class="diff-badge-lbl" data-i18n="lbl_difficulty">Difficulty</span>
+              <span class="diff-badge {{ s.difficulty }}" id="difficulty-{{ cat }}">{{ s.difficulty|replace('_',' ')|title }}</span>
+            </div>
+            {% if active_session %}
+            <div class="diff-adj-row" id="adj-{{ cat }}">
+              {% for lvl in ['very_easy','easy','medium','hard','very_hard'] %}
+              <button class="diff-adj-btn {% if s.difficulty == lvl %}active{% endif %}"
+                      data-cat="{{ cat }}" data-lvl="{{ lvl }}"
+                      onclick="manualSetDiff('{{ cat }}','{{ lvl }}')">
+                {{ lvl|replace('_',' ')|title }}
+              </button>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <hr class="gc-divider">
+
+            <div data-group-list="{{ cat }}">
+              {% if students and students|length > 0 %}
+                {% for st in students %}
+                <div class="student-item">
+                  <div class="st-avatar">{{ st.name[0]|upper }}</div>
+                  <div>
+                    <div class="st-name">{{ st.name }}</div>
+                    <div class="st-meta">Confidence {{ ((st.confidence or 0) * 100)|round(1) }}% · Accuracy {{ st.accuracy or 0 }}%</div>
+                  </div>
+                </div>
+                {% endfor %}
+              {% else %}
+                <div class="empty-group" data-i18n="msg_no_group">No students in this group yet.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+</div>
+
+<script src="/static/js/i18n.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+const activeSessionId = {{ active_session.id if active_session else 'null' }};
+const CLASS_ID = {{ class_id }};
+const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' };
+const liveStatusEl = document.getElementById('live-status');
+const INACTIVE_THRESHOLD_MS = 30000;
+const lastSeen = {};
+
+function setLiveStatus(text) { if (liveStatusEl) liveStatusEl.textContent = text; }
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+
+function renderGroupList(cat, students) {
+  const listEl = document.querySelector(`[data-group-list="${cat}"]`);
+  const countEl = document.querySelector(`[data-group-count="${cat}"]`);
+  if (countEl) countEl.textContent = `${(students || []).length} ${t('lbl_students')}`;
+  if (!listEl) return;
+  if (!students || students.length === 0) {
+    listEl.innerHTML = `<div class="empty-group">${t('msg_no_group')}</div>`;
+    return;
+  }
+  const now = Date.now();
+  listEl.innerHTML = students.map(st => {
+    const sid = String(st.student_id || '');
+    const inactive = sid && (!lastSeen[sid] || now - lastSeen[sid] > INACTIVE_THRESHOLD_MS);
+    const chip = inactive ? `<span class="inactive-chip">📷 Not detected</span>` : '';
+    const initials = esc((st.name || '?')[0].toUpperCase());
+    return `
+      <div class="student-item">
+        <div class="st-avatar">${initials}</div>
+        <div>
+          <div class="st-name${inactive ? ' faded' : ''}">${esc(st.name)}${chip}</div>
+          <div class="st-meta">Confidence ${(Number(st.confidence || 0)*100).toFixed(1)}% · Accuracy ${Number(st.accuracy||0)}%</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function updateView(data) {
+  const summary = data.summary || {};
+  const groups  = data.groups  || {};
+  const totalEl = document.getElementById('total-detected');
+  if (totalEl) totalEl.textContent = String(data.total || 0);
+
+  ['Happy','Engaged','Confused','Frustrated'].forEach(cat => {
+    const s = summary[cat] || {count:0, percentage:0, difficulty:'medium'};
+    const q = (sel) => document.querySelector(`[${sel}="${cat}"]`);
+    const el = (id) => document.getElementById(id);
+    const countEl = q('data-summary-count');
+    const pctEl   = q('data-summary-percentage');
+    const badgeEl = el(`difficulty-${cat}`);
+    if (countEl) countEl.textContent = String(s.count || 0);
+    if (pctEl)   pctEl.textContent   = String(s.percentage || 0);
+    if (badgeEl && s.difficulty) {
+      badgeEl.className = `diff-badge ${s.difficulty}`;
+      badgeEl.textContent = s.difficulty.replace('_',' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    // sync manual-adjust buttons
+    document.querySelectorAll(`#adj-${cat} .diff-adj-btn`).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lvl === s.difficulty);
+    });
+    renderGroupList(cat, groups[cat] || []);
+  });
+
+  const snEl = document.getElementById('active-session-name');
+  if (snEl && data.active_session?.session_name) snEl.textContent = data.active_session.session_name;
+  setLiveStatus(data.updated_at ? `Update: ${data.updated_at}` : 'Live');
+}
+
+async function manualSetDiff(cat, lvl) {
+  if (!activeSessionId) return;
+  document.querySelectorAll(`#adj-${cat} .diff-adj-btn`).forEach(btn => btn.disabled = true);
+  try {
+    await fetch('/api/change-group-difficulty', {
+      method: 'POST',
+      headers: FETCH_HEADERS,
+      body: JSON.stringify({ session_id: activeSessionId, category: cat, difficulty: lvl })
+    });
+    // UI update arrives via socket 'difficulty_changed'
+  } catch(e) {
+    console.error('Manual adjust failed', e);
+  } finally {
+    document.querySelectorAll(`#adj-${cat} .diff-adj-btn`).forEach(btn => btn.disabled = false);
+  }
+}
+
+async function refreshEmotionGroups() {
+  try {
+    const res  = await fetch(`/api/emotion-groups/${CLASS_ID}`);
+    const data = await res.json();
+    if (!data.success) { setLiveStatus(t('msg_failed_load')); return; }
+    updateView(data);
+  } catch(e) {
+    setLiveStatus('Network / server error');
+  }
+}
+
+if (activeSessionId) {
+  const socket = io();
+  socket.emit('join_session', { session_id: activeSessionId, role: 'teacher', name: 'Teacher Emotion Groups' });
+  socket.on('connect',    () => setLiveStatus('Live'));
+  socket.on('disconnect', () => setLiveStatus(t('status_disconnected')));
+  socket.on('emotion_update', payload => {
+    if (!payload || Number(payload.session_id) !== Number(activeSessionId)) return;
+    if (payload.student_id) lastSeen[String(payload.student_id)] = Date.now();
+    refreshEmotionGroups();
+  });
+  socket.on('difficulty_changed', payload => {
+    if (!payload || Number(payload.session_id || activeSessionId) !== Number(activeSessionId)) return;
+    refreshEmotionGroups();
+  });
+  socket.on('all_students_done', payload => {
+    const btn = document.getElementById('btn-next-round');
+    if (btn) {
+      btn.style.display = 'inline-flex';
+      btn.textContent = '';
+      btn.innerHTML = `▶ ${t('btn_next_round') || 'Next Round'} (${payload.finished}/${payload.total})`;
+    }
+    setLiveStatus(`✅ All done — ${payload.finished}/${payload.total}`);
+  });
+  setInterval(refreshEmotionGroups, 15000);
+}
+
+async function startNextRound() {
+  const btn = document.getElementById('btn-next-round');
+  if (!activeSessionId) return;
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/start-round', {
+      method: 'POST',
+      headers: FETCH_HEADERS,
+      body: JSON.stringify({ session_id: activeSessionId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (btn) { btn.style.display = 'none'; btn.disabled = false; }
+      setLiveStatus('Live');
+      refreshEmotionGroups();
+    } else {
+      if (btn) btn.disabled = false;
+      setLiveStatus('Failed to start round');
+    }
+  } catch(e) {
+    if (btn) btn.disabled = false;
+    setLiveStatus('Network error');
+  }
+}
+
+refreshEmotionGroups();
+</script>
+</body>
+</html>

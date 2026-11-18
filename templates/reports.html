@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Reports — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#f8fafc;min-height:100vh;color:#0f172a}
+
+.header{
+  background:linear-gradient(135deg,#0c4a6e 0%,#312e81 100%);
+  padding:0 28px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);
+  position:sticky;top:0;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}
+.logo-icon{background:linear-gradient(135deg,#0ea5e9,#7c3aed);width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 10px rgba(14,165,233,.4)}
+.nav-tabs{display:flex;gap:6px}
+.nav-tab{padding:8px 16px;border-radius:20px;text-decoration:none;color:rgba(255,255,255,.75);font-size:13px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-tab.logout{background:rgba(255,255,255,.12)}
+.nav-tab.logout:hover{background:rgba(239,68,68,.25);color:#fca5a5}
+
+.main{max-width:1100px;margin:0 auto;padding:28px 24px}
+
+.page-hero{
+  background:linear-gradient(135deg,#0284c7 0%,#7c3aed 100%);
+  border-radius:24px;padding:26px 30px;color:#fff;margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.page-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.page-hero::after{content:'';position:absolute;bottom:-40px;right:80px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
+.hero-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.hero-title{font-size:22px;font-weight:900;letter-spacing:-.3px}
+.hero-sub{font-size:13px;opacity:.7;font-weight:600;margin-top:5px}
+.hero-class-pill{
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);
+  padding:8px 18px;border-radius:14px;font-size:13px;font-weight:800;
+  white-space:nowrap;flex-shrink:0;position:relative;
+}
+.hero-stats{display:flex;gap:12px;position:relative;flex-wrap:wrap}
+.hs{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.18);border-radius:16px;padding:14px 22px;flex:1;min-width:110px}
+.hs-num{font-size:26px;font-weight:900;line-height:1}
+.hs-lbl{font-size:11px;opacity:.65;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+
+.panel{background:#fff;border-radius:22px;padding:24px;margin-bottom:20px;border:1.5px solid #e2e8f0;box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.panel-head-left{display:flex;align-items:center;gap:12px}
+.panel-icon{width:44px;height:44px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.panel-icon.cyan{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+.panel-icon.violet{background:linear-gradient(135deg,#ede9fe,#ddd6fe)}
+.panel-title{font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px}
+.panel-sub{font-size:12px;color:#94a3b8;font-weight:600}
+.count-badge{background:linear-gradient(135deg,#f0f9ff,#ede9fe);color:#5b21b6;border:1.5px solid #ddd6fe;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800}
+
+/* Session cards */
+.session-list{display:flex;flex-direction:column;gap:12px}
+.session-card{
+  border:1.5px solid #e2e8f0;border-radius:18px;padding:18px 20px;
+  background:#fff;transition:.2s;position:relative;overflow:hidden;
+}
+.session-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#0ea5e9,#7c3aed);border-radius:4px 0 0 4px;opacity:0;transition:.2s}
+.session-card:hover{border-color:#c4b5fd;box-shadow:0 6px 22px rgba(124,58,237,.1);transform:translateY(-2px)}
+.session-card:hover::before{opacity:1}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sc-name{font-size:15px;font-weight:900;color:#0f172a}
+.sc-date{font-size:12px;color:#94a3b8;font-weight:600;margin-top:3px;display:flex;align-items:center;gap:5px}
+.sc-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:900;border:1.5px solid}
+.badge-active{background:#ecfdf5;color:#065f46;border-color:#6ee7b7}
+.badge-ended{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
+.sc-meta{display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.sc-meta-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#64748b;font-weight:700}
+.sc-meta-val{font-weight:900;color:#0f172a}
+.sc-accuracy{margin-bottom:12px}
+.acc-label{display:flex;justify-content:space-between;margin-bottom:6px}
+.acc-lbl-txt{font-size:11px;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.acc-pct{font-size:12px;font-weight:900;background:linear-gradient(135deg,#0ea5e9,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.acc-bar{height:8px;border-radius:4px;background:#f1f5f9;overflow:hidden}
+.acc-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#0ea5e9,#7c3aed)}
+.sc-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-view{
+  text-decoration:none;background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;border:none;padding:8px 18px;border-radius:10px;
+  font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;
+  transition:.15s;display:inline-flex;align-items:center;gap:5px;
+}
+.btn-view:hover{opacity:.9;box-shadow:0 4px 12px rgba(14,165,233,.3);transform:translateY(-1px)}
+.btn-delete{
+  background:#fff5f5;color:#dc2626;border:1.5px solid #fecaca;
+  padding:8px 14px;border-radius:10px;font-size:12px;font-weight:900;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.btn-delete:hover{background:#fee2e2;border-color:#fca5a5}
+.btn-export{
+  text-decoration:none;background:#f0f9ff;color:#0369a1;
+  border:1.5px solid #bae6fd;padding:7px 14px;border-radius:10px;
+  font-size:12px;font-weight:900;transition:.15s;
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.btn-export:hover{background:#e0f2fe;border-color:#7dd3fc}
+.btn-export-all{
+  text-decoration:none;background:linear-gradient(135deg,#f0f9ff,#ede9fe);
+  color:#5b21b6;border:1.5px solid #ddd6fe;padding:7px 16px;border-radius:10px;
+  font-size:12px;font-weight:900;transition:.15s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.btn-export-all:hover{background:linear-gradient(135deg,#e0f2fe,#ddd6fe)}
+
+/* Student list */
+.student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.student-card{
+  display:flex;align-items:center;gap:12px;
+  border:1.5px solid #e2e8f0;border-radius:14px;
+  padding:12px 14px;background:#fff;transition:.2s;
+}
+.student-card:hover{border-color:#c4b5fd;background:#fdf4ff}
+.student-avatar{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+}
+.student-name{font-weight:800;font-size:13px;color:#0f172a;margin-bottom:2px}
+.student-user{font-size:11px;color:#94a3b8;font-weight:600}
+.student-date{font-size:11px;color:#94a3b8;font-weight:600;margin-top:2px}
+
+.empty{text-align:center;color:#94a3b8;padding:44px 24px;border:2px dashed #e2e8f0;border-radius:18px;background:#f8fafc;font-size:14px;font-weight:700}
+.empty-icon{font-size:36px;display:block;margin-bottom:10px}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart-box{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:18px;padding:20px}
+.chart-title{font-size:13px;font-weight:900;color:#0f172a;margin-bottom:4px}
+.chart-sub{font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:16px}
+.chart-wrap{position:relative;height:220px}
+@media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
+
+@media(max-width:700px){.hero-stats{gap:8px}.hs{padding:12px 14px}}
+@media(max-width:640px){
+  .header{padding:0 16px}
+  .logo{font-size:14px}
+  .nav-tab{padding:7px 10px;font-size:12px}
+  .main{padding:18px 16px}
+  .page-hero{padding:20px}
+  .hero-title{font-size:18px}
+  .panel{padding:18px}
+  .student-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){.student-grid{grid-template-columns:1fr}}
+@media(max-width:480px){
+  .logo-lbl{display:none}
+  .tab-lbl{display:none}
+  .nav-tab{padding:8px 10px}
+  .main{padding:14px 12px}
+  .page-hero{padding:16px}
+  .hero-title{font-size:16px}
+  .panel{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-icon">🎓</div><span class="logo-lbl"> Emotion Learning</span></div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/teacher?class={{ class_id }}">🏠<span class="tab-lbl" data-i18n="nav_dashboard"> Dashboard</span></a>
+    <a class="nav-tab" href="/teacher/class/{{ class_id }}">←<span class="tab-lbl" data-i18n="btn_back"> Back</span></a>
+    <a class="nav-tab logout" href="/logout">🚪<span class="tab-lbl" data-i18n="btn_sign_out"> Sign Out</span></a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="page-hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-title" data-i18n="title_reports">📊 Class Reports</div>
+        <div class="hero-sub" data-i18n="msg_reports_sub">Session history and class statistics.</div>
+      </div>
+      <div class="hero-class-pill">🏫 {{ class_name }}</div>
+    </div>
+    <div class="hero-stats">
+      <div class="hs">
+        <div class="hs-num">{{ all_sessions|length }}</div>
+        <div class="hs-lbl">📅 <span data-i18n="lbl_sessions">Sessions</span></div>
+      </div>
+      <div class="hs">
+        <div class="hs-num">{{ students|length }}</div>
+        <div class="hs-lbl">👥 <span data-i18n="lbl_students">Students</span></div>
+      </div>
+      <div class="hs">
+        {% set total_acc = namespace(sum=0, count=0) %}
+        {% for s in all_sessions %}{% if s.avg_accuracy %}{% set total_acc.sum = total_acc.sum + s.avg_accuracy %}{% set total_acc.count = total_acc.count + 1 %}{% endif %}{% endfor %}
+        <div class="hs-num">{{ (total_acc.sum / total_acc.count)|round(1) if total_acc.count > 0 else 0 }}%</div>
+        <div class="hs-lbl">🎯 <span data-i18n="lbl_avg_accuracy">Avg Accuracy</span></div>
+      </div>
+      <div class="hs">
+        {% set total_ans = namespace(n=0) %}
+        {% for s in all_sessions %}{% set total_ans.n = total_ans.n + (s.total_answers or 0) %}{% endfor %}
+        <div class="hs-num">{{ total_ans.n }}</div>
+        <div class="hs-lbl">📝 <span data-i18n="lbl_total_answers">Total Answers</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Charts -->
+  {% if all_sessions and all_sessions|length > 1 %}
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">📈</div>
+        <div>
+          <div class="panel-title" data-i18n="lbl_analytics">Analytics</div>
+          <div class="panel-sub">Accuracy and answer trends across sessions.</div>
+        </div>
+      </div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-box">
+        <div class="chart-title" data-i18n="msg_accuracy_chart">Accuracy per Session</div>
+        <div class="chart-sub" data-i18n="msg_accuracy_sub">Average accuracy (%) — most recent 10 sessions</div>
+        <div class="chart-wrap"><canvas id="chartAccuracy"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title" data-i18n="msg_answers_chart">Answers per Session</div>
+        <div class="chart-sub" data-i18n="msg_answers_sub">Total answers submitted per session</div>
+        <div class="chart-wrap"><canvas id="chartAnswers"></canvas></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Session History -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon cyan">📅</div>
+        <div>
+          <div class="panel-title" data-i18n="lbl_session_history">Session History</div>
+          <div class="panel-sub" data-i18n="msg_session_list_sub">All learning sessions that have taken place.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        {% if all_sessions %}<div class="count-badge">{{ all_sessions|length }} sessions</div>{% endif %}
+        <a href="/teacher/reports/{{ class_id }}/export-csv" class="btn-export-all">📥 Export All CSV</a>
+      </div>
+    </div>
+
+    {% if all_sessions %}
+    <div class="session-list">
+      {% for s in all_sessions %}
+      <div class="session-card">
+        <div class="sc-top">
+          <div>
+            <div class="sc-name">{{ s.session_name or 'Unnamed Session' }}</div>
+            <div class="sc-date">📅 {{ s.started_at.strftime('%d %b %Y, %H:%M') if s.started_at else '—' }}</div>
+          </div>
+          <div class="sc-right">
+            {% if s.ended_at %}
+              <span class="badge badge-ended" data-i18n="status_ended">⏹ Ended</span>
+            {% else %}
+              <span class="badge badge-active" data-i18n="status_active">🟢 Active</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="sc-meta">
+          <div class="sc-meta-item">👥 <span class="sc-meta-val">{{ s.active_students or 0 }}</span> <span data-i18n="lbl_students">students</span></div>
+          <div class="sc-meta-item">📝 <span class="sc-meta-val">{{ s.total_answers or 0 }}</span> <span data-i18n="lbl_answers">answers</span></div>
+        </div>
+        <div class="sc-accuracy">
+          <div class="acc-label">
+            <span class="acc-lbl-txt" data-i18n="lbl_accuracy">Accuracy</span>
+            <span class="acc-pct">{{ s.avg_accuracy or 0 }}%</span>
+          </div>
+          <div class="acc-bar"><div class="acc-fill" style="width:{{ s.avg_accuracy or 0 }}%"></div></div>
+        </div>
+        <div class="sc-actions">
+          <a href="/teacher/reports/session/{{ s.id }}" class="btn-view" data-i18n="btn_view">👁 View Details</a>
+          <a href="/teacher/reports/session/{{ s.id }}/export-csv" class="btn-export" data-i18n="btn_export_csv">📥 Export CSV</a>
+          <form action="/teacher/reports/delete-session/{{ s.id }}" method="POST"
+                onsubmit="return confirm('Delete this session and all its answer and emotion data?');" style="display:inline">
+            <input type="hidden" name="class_id" value="{{ class_id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-delete">🗑 Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      <span class="empty-icon">📭</span>
+      <span data-i18n="msg_no_sessions">No sessions recorded yet.</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Enrolled Students -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon violet">👥</div>
+        <div>
+          <div class="panel-title" data-i18n="lbl_enrolled">Enrolled Students</div>
+          <div class="panel-sub" data-i18n="msg_enrolled_list">Students enrolled in this class.</div>
+        </div>
+      </div>
+      {% if students %}<div class="count-badge">{{ students|length }} students</div>{% endif %}
+    </div>
+
+    {% if students %}
+    <div class="student-grid">
+      {% for s in students %}
+      <div class="student-card">
+        <div class="student-avatar">{{ s.name[0]|upper }}</div>
+        <div>
+          <div class="student-name">{{ s.name }}</div>
+          <div class="student-user">@{{ s.username }}</div>
+          <div class="student-date">{{ s.joined_at.strftime('%d %b %Y') if s.joined_at else '' }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty" data-i18n="msg_no_students">No students have joined yet.</div>
+    {% endif %}
+  </div>
+
+</div>
+<script>
+const socket = io();
+
+// ── Charts ──────────────────────────────────────────
+const sessions = {{ all_sessions | tojson }};
+if (sessions.length > 1) {
+  const recent = [...sessions].reverse().slice(-10);
+  const labels  = recent.map((s, i) => s.session_name || `Session ${i+1}`);
+  const accData  = recent.map(s => s.avg_accuracy || 0);
+  const ansData  = recent.map(s => s.total_answers || 0);
+
+  const chartDefaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { font: { family: 'Nunito', size: 11, weight: '700' }, color: '#94a3b8', maxRotation: 30 }, grid: { display: false } },
+      y: { ticks: { font: { family: 'Nunito', size: 11, weight: '700' }, color: '#94a3b8' }, grid: { color: '#f1f5f9' } }
+    }
+  };
+
+  new Chart(document.getElementById('chartAccuracy'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: accData,
+        borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,.08)',
+        borderWidth: 2.5, pointBackgroundColor: '#7c3aed', pointRadius: 4,
+        tension: 0.35, fill: true
+      }]
+    },
+    options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 0, max: 100, ticks: { ...chartDefaults.scales.y.ticks, callback: v => v + '%' } } } }
+  });
+
+  new Chart(document.getElementById('chartAnswers'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: ansData,
+        backgroundColor: 'rgba(14,165,233,.2)', borderColor: '#0ea5e9',
+        borderWidth: 2, borderRadius: 8
+      }]
+    },
+    options: chartDefaults
+  });
+}
+</script>
+</body>
+</html>

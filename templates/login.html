@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f0f9ff;position:relative;overflow:hidden}
+.blob{position:fixed;border-radius:50%;filter:blur(72px);opacity:.38;pointer-events:none;z-index:0}
+.b1{width:440px;height:440px;background:#7c3aed;top:-150px;left:-130px}
+.b2{width:380px;height:380px;background:#0ea5e9;bottom:-120px;right:-100px}
+.b3{width:300px;height:300px;background:#f59e0b;bottom:5%;left:28%}
+.card{position:relative;z-index:1;background:#fff;border-radius:28px;padding:44px 40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(14,165,233,.18)}
+.brand{text-align:center;margin-bottom:28px}
+.emoji-row{font-size:30px;letter-spacing:6px;margin-bottom:12px}
+.brand h1{font-size:24px;font-weight:900;background:linear-gradient(135deg,#0ea5e9,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand p{font-size:13px;color:#94a3b8;margin-top:5px;font-weight:600}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px;background:#f1f5f9;padding:5px;border-radius:16px}
+.role-tab{padding:10px;border:none;background:transparent;border-radius:12px;text-align:center;cursor:pointer;font-size:13px;font-weight:800;color:#94a3b8;transition:.2s;font-family:inherit}
+.role-tab.active{background:linear-gradient(135deg,#0ea5e9,#7c3aed);color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.3)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:800;color:#374151;margin-bottom:6px}
+.form-group input{width:100%;padding:12px 14px;border:2px solid #e0f2fe;border-radius:14px;font-size:14px;font-family:inherit;transition:.2s;background:#f0f9ff;font-weight:600}
+.form-group input:focus{border-color:#0ea5e9;background:#fff;outline:none;box-shadow:0 0 0 4px rgba(14,165,233,.12)}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#7c3aed);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer;margin-top:4px;font-family:inherit;transition:.2s}
+.btn:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.35)}
+.alert{padding:12px 14px;border-radius:14px;font-size:13px;margin-bottom:18px;display:flex;align-items:center;gap:8px;font-weight:700}
+.alert-error{background:#fef2f2;color:#dc2626;border:2px solid #fecaca}
+.alert-success{background:#f0fdf4;color:#16a34a;border:2px solid #bbf7d0}
+.footer-link{text-align:center;margin-top:20px;font-size:13px;color:#94a3b8;font-weight:600}
+.footer-link a{color:#7c3aed;font-weight:900;text-decoration:none}
+.footer-link a:hover{text-decoration:underline}
+@media(max-width:480px){
+  .card{padding:32px 22px;border-radius:22px}
+  .emoji-row{font-size:24px;letter-spacing:4px}
+  .brand h1{font-size:20px}
+  .role-tab{font-size:12px;padding:9px 6px}
+  .btn{font-size:14px;padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="card">
+  <div class="brand">
+    <div class="emoji-row">😊 📚 🎯</div>
+    <h1>Emotion Learning</h1>
+    <p>Sign in to your account to continue</p>
+  </div>
+
+  {% if error %}<div class="alert alert-error">⚠ {{ error }}</div>{% endif %}
+  {% if success %}<div class="alert alert-success">✓ {{ success }}</div>{% endif %}
+
+  <form action="/login" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="role-tabs">
+      <button type="button" class="role-tab active" id="tab-teacher" onclick="setRole('teacher')">👩‍🏫 Teacher</button>
+      <button type="button" class="role-tab" id="tab-student" onclick="setRole('student')">👨‍🎓 Student</button>
+    </div>
+    <input type="hidden" name="role" id="roleInput" value="teacher">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="Enter your username" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter your password" required>
+    </div>
+    <button type="submit" class="btn">Sign In →</button>
+  </form>
+  <div class="footer-link">Don't have an account? <a href="/register">Create one here</a></div>
+</div>
+<script>
+function setRole(r){
+  document.getElementById('roleInput').value=r;
+  document.getElementById('tab-teacher').classList.toggle('active',r==='teacher');
+  document.getElementById('tab-student').classList.toggle('active',r==='student');
+}
+</script>
+</body>
+</html>

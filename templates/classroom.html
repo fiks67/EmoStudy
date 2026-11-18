@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classroom — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#f8fafc;min-height:100vh;color:#0f172a}
+
+/* ── Header ── */
+.header{
+  background:linear-gradient(135deg,#0c4a6e 0%,#312e81 100%);
+  padding:0 28px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15);
+  position:sticky;top:0;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}
+.logo-icon{background:linear-gradient(135deg,#0ea5e9,#7c3aed);width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 10px rgba(14,165,233,.4)}
+.nav-tabs{display:flex;gap:6px;align-items:center}
+.nav-tab{
+  padding:8px 16px;border-radius:20px;text-decoration:none;
+  color:rgba(255,255,255,.75);font-size:13px;font-weight:700;
+  transition:.15s;display:flex;align-items:center;gap:6px;
+}
+.nav-tab:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-tab.logout{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85)}
+.nav-tab.logout:hover{background:rgba(239,68,68,.25);color:#fca5a5}
+
+/* ── Layout ── */
+.main{max-width:1100px;margin:0 auto;padding:28px 24px}
+
+/* ── Page hero ── */
+.page-hero{
+  background:linear-gradient(135deg,#0284c7 0%,#7c3aed 100%);
+  border-radius:24px;padding:24px 28px;color:#fff;
+  margin-bottom:24px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.page-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.page-hero::after{content:'';position:absolute;bottom:-40px;right:100px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
+.hero-left{position:relative}
+.hero-title{font-size:22px;font-weight:900;letter-spacing:-.3px}
+.hero-sub{font-size:13px;opacity:.7;font-weight:600;margin-top:4px}
+.hero-class{
+  position:relative;
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);
+  padding:10px 18px;border-radius:14px;font-size:13px;font-weight:800;
+  text-align:center;flex-shrink:0;
+}
+.hero-class-label{font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.hero-class-name{font-size:15px;font-weight:900}
+
+/* ── Suggestion Panel ── */
+.suggestion-panel{
+  border-radius:18px;padding:18px 22px;margin-bottom:20px;
+  border:1.5px solid #fcd34d;background:linear-gradient(135deg,#fffbeb,#fef9e7);
+  display:none;
+}
+.suggestion-panel.visible{display:block}
+.suggestion-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.suggestion-icon{font-size:22px;line-height:1}
+.suggestion-title{font-size:13px;font-weight:900;color:#92400e;text-transform:uppercase;letter-spacing:.4px}
+.suggestion-emo-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.suggestion-emo-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:800;border:1.5px solid}
+.suggestion-text{font-size:13px;font-weight:700;color:#44403c;line-height:1.6;border-left:3px solid #fcd34d;padding-left:12px;margin-top:4px}
+.suggestion-bar{display:flex;gap:3px;height:7px;border-radius:6px;overflow:hidden;margin-top:12px}
+.suggestion-bar-seg{height:100%;transition:width .5s}
+.suggestion-adj{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #fcd34d;font-size:12px;color:#78350f;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.suggestion-adj-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#fff;border:1px solid #fcd34d}
+
+/* ── Panel ── */
+.panel{
+  background:#fff;border-radius:22px;padding:24px;
+  margin-bottom:20px;border:1.5px solid #e2e8f0;
+  box-shadow:0 2px 14px rgba(0,0,0,.05);
+}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.panel-icon{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.panel-icon.cyan{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+.panel-icon.violet{background:linear-gradient(135deg,#ede9fe,#ddd6fe)}
+.panel-icon.green{background:linear-gradient(135deg,#d1fae5,#a7f3d0)}
+.panel-title{font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px}
+.panel-sub{font-size:12px;color:#94a3b8;font-weight:600}
+
+/* ── Session status ── */
+.session-status-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.status-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:800;padding:10px 20px;
+  border-radius:999px;border:2px solid;
+}
+.status-chip.live{background:#ecfdf5;color:#065f46;border-color:#6ee7b7}
+.status-chip.idle{background:#f8fafc;color:#475569;border-color:#cbd5e1}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-chip.live .status-dot{background:#10b981;animation:pulse-dot 1.5s infinite}
+.status-chip.idle .status-dot{background:#94a3b8}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  border:none;border-radius:13px;padding:12px 22px;
+  font-size:14px;font-weight:800;cursor:pointer;
+  font-family:inherit;transition:.18s;display:inline-flex;
+  align-items:center;gap:7px;
+}
+.btn:hover:not([disabled]){transform:translateY(-2px)}
+.btn:active:not([disabled]){transform:translateY(0)}
+.btn-primary{
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);color:#fff;
+  box-shadow:0 4px 14px rgba(14,165,233,.3);
+}
+.btn-primary:hover:not([disabled]){box-shadow:0 6px 20px rgba(14,165,233,.42)}
+.btn-danger{
+  background:linear-gradient(135deg,#f43f5e,#dc2626);color:#fff;
+  box-shadow:0 4px 14px rgba(220,38,38,.25);
+}
+.btn-danger:hover:not([disabled]){box-shadow:0 6px 20px rgba(220,38,38,.38)}
+.btn-outline{
+  background:#f8fafc;color:#475569;
+  border:1.5px solid #e2e8f0;
+}
+.btn-outline:hover:not([disabled]){background:#f1f5f9;border-color:#cbd5e1;color:#0f172a}
+.btn[disabled]{opacity:.35;cursor:not-allowed;transform:none !important}
+
+.session-input{
+  width:100%;border:1.5px solid #e2e8f0;border-radius:14px;
+  padding:13px 16px;font-size:14px;font-family:inherit;
+  background:#f8fafc;font-weight:600;transition:.2s;color:#0f172a;
+}
+.session-input:focus{border-color:#0ea5e9;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.session-input::placeholder{color:#94a3b8}
+
+.info-note{
+  margin-top:14px;padding:12px 16px;
+  background:#f0f9ff;border:1.5px solid #bae6fd;
+  border-radius:13px;font-size:13px;color:#0369a1;
+  font-weight:700;display:flex;align-items:center;gap:8px;
+}
+
+.btn-manage{
+  text-decoration:none;
+  background:linear-gradient(135deg,#7c3aed,#6d28d9);
+  color:#fff;border-radius:13px;padding:12px 22px;
+  font-size:14px;font-weight:800;font-family:inherit;
+  transition:.18s;display:inline-flex;align-items:center;gap:7px;
+  box-shadow:0 4px 14px rgba(124,58,237,.3);white-space:nowrap;
+}
+.btn-manage:hover{box-shadow:0 6px 20px rgba(124,58,237,.42);transform:translateY(-2px)}
+
+/* ── Students grid ── */
+.students-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.student-count{
+  background:linear-gradient(135deg,#e0f2fe,#ede9fe);
+  color:#0369a1;border:1.5px solid #bae6fd;
+  padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;
+}
+.student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.student-card{
+  display:flex;align-items:center;gap:12px;
+  border:1.5px solid #e2e8f0;border-radius:16px;
+  padding:14px 16px;background:#fff;
+  transition:.2s;
+}
+.student-card:hover{border-color:#c4b5fd;background:#fdf4ff;box-shadow:0 4px 14px rgba(124,58,237,.1)}
+.student-avatar{
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.student-name{font-weight:800;font-size:13px;color:#0f172a;margin-bottom:2px}
+.student-user{font-size:12px;color:#94a3b8;font-weight:600}
+
+.empty{
+  text-align:center;color:#94a3b8;padding:40px 24px;
+  border:2px dashed #e2e8f0;border-radius:18px;background:#f8fafc;
+  font-size:14px;font-weight:700;
+}
+
+/* ── Live Camera Grid ── */
+.cam-grid-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.cam-student-card{border-radius:16px;border:1.5px solid #e2e8f0;overflow:hidden;background:#fff;transition:.2s}
+.cam-student-card:hover{border-color:#c4b5fd;box-shadow:0 4px 14px rgba(124,58,237,.1)}
+.cam-thumb-wrap{position:relative;background:linear-gradient(135deg,#0c4a6e,#1e3a5f);aspect-ratio:4/3;overflow:hidden}
+.cam-thumb{width:100%;height:100%;object-fit:cover;display:block}
+.cam-no-feed{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#64748b}
+.cam-emotion-tag{
+  position:absolute;bottom:6px;left:6px;right:6px;
+  padding:4px 8px;border-radius:8px;font-size:11px;font-weight:800;
+  border:1.5px solid;text-align:center;backdrop-filter:blur(4px);
+}
+.cam-sname{font-size:12px;font-weight:800;color:#0f172a;padding:8px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cam-live-badge{display:inline-flex;align-items:center;gap:5px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:800}
+.cam-live-dot{width:7px;height:7px;border-radius:50%;background:#10b981;animation:pulse-dot 1.5s infinite}
+.cam-empty-msg{text-align:center;color:#94a3b8;padding:32px 24px;border:2px dashed #e2e8f0;border-radius:14px;font-size:13px;font-weight:700}
+
+@media(max-width:640px){
+  .header{padding:0 16px}
+  .logo{font-size:14px}
+  .nav-tab{padding:7px 10px;font-size:12px}
+  .main{padding:18px 16px}
+  .page-hero{padding:20px}
+  .hero-title{font-size:18px}
+  .panel{padding:18px}
+  .btn-row{width:100%}
+  .btn-row .btn{flex:1;justify-content:center}
+  .student-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .logo-lbl{display:none}
+  .tab-lbl{display:none}
+  .nav-tab{padding:8px 10px}
+  .main{padding:14px 12px}
+  .page-hero{padding:16px}
+  .hero-title{font-size:16px}
+  .panel{padding:16px}
+}
+@media(max-width:420px){
+  .student-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-icon">🎓</div><span class="logo-lbl"> Emotion Learning</span></div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/teacher?class={{ class_id }}">🏠<span class="tab-lbl" data-i18n="nav_dashboard"> Dashboard</span></a>
+    <a class="nav-tab" href="/teacher/reports/{{ class_id }}">📊<span class="tab-lbl" data-i18n="nav_reports"> Reports</span></a>
+    <a class="nav-tab logout" href="/logout">🚪<span class="tab-lbl" data-i18n="btn_sign_out"> Sign Out</span></a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Hero -->
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-title" data-i18n="title_classroom">🖥️ Classroom</div>
+      <div class="hero-sub" data-i18n="msg_manage_sessions">Manage live learning sessions for this class.</div>
+    </div>
+    <div class="hero-class">
+      <div class="hero-class-label" data-i18n="lbl_class">Class</div>
+      <div class="hero-class-name">{{ class_name }}</div>
+    </div>
+  </div>
+
+  <!-- Session Control -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-icon cyan">▶️</div>
+      <div>
+        <div class="panel-title" data-i18n="lbl_session_control">Session Control</div>
+        <div class="panel-sub" data-i18n="msg_manage_sessions">Manage live learning sessions for this class.</div>
+      </div>
+    </div>
+
+    <div class="session-status-row">
+      <div id="session-status" class="status-chip {% if active_session %}live{% else %}idle{% endif %}">
+        <span class="status-dot"></span>
+        {% if active_session %}
+          <span data-i18n="status_active">🟢 Active</span>: <span id="active-session-name">{{ active_session.session_name }}</span>
+        {% else %}
+          <span data-i18n="status_no_session">No active session</span>
+        {% endif %}
+      </div>
+      <div class="btn-row">
+        <button id="btn-start" class="btn btn-primary" {% if active_session %}disabled{% endif %} data-i18n="btn_start">▶ Start Session</button>
+        <button id="btn-end" class="btn btn-danger" {% if not active_session %}disabled{% endif %} data-i18n="btn_end">⏹ End Session</button>
+        <button id="btn-next-round" class="btn" onclick="startNextRound()"
+          style="display:none;background:linear-gradient(135deg,#10b981,#0ea5e9);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.35)">
+          ▶ <span data-i18n="btn_next_round">Next Round</span>
+        </button>
+      </div>
+    </div>
+
+    <input id="session-name" class="session-input" type="text" data-i18n-ph="misc_session_name_ph" placeholder="Session name (optional), e.g. Math — Chapter 3">
+    <div class="info-note" data-i18n="msg_session_hint">💡 When session is active, students will automatically enter the learning page.</div>
+  </div>
+
+  <!-- Live Camera Grid -->
+  <div class="panel" id="camera-panel" style="display:none">
+    <div class="students-header">
+      <div class="panel-head" style="margin-bottom:0">
+        <div class="panel-icon" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8)">📷</div>
+        <div>
+          <div class="panel-title" data-i18n="lbl_camera">📷 Camera</div>
+          <div class="panel-sub" data-i18n="msg_enrolled_list">Student camera thumbnails currently active.</div>
+        </div>
+      </div>
+      <div class="cam-live-badge"><span class="cam-live-dot"></span><span id="cam-online-count">0 online</span></div>
+    </div>
+    <div class="cam-grid-wrap" id="camera-grid">
+      <div class="cam-empty-msg" data-i18n="msg_waiting_students">Waiting for students to join and enable camera...</div>
+    </div>
+  </div>
+
+  <!-- Suggestion Panel -->
+  <div class="suggestion-panel" id="suggestion-panel">
+    <div class="suggestion-header">
+      <span class="suggestion-icon">💡</span>
+      <span class="suggestion-title" data-i18n="lbl_suggestion">Saran Tindakan</span>
+    </div>
+    <div class="suggestion-emo-row" id="suggestion-emo-row"></div>
+    <div class="suggestion-text" id="suggestion-text"></div>
+    <div class="suggestion-bar" id="suggestion-bar"></div>
+    <div class="suggestion-adj" id="suggestion-adj"></div>
+  </div>
+
+
+  <!-- Students -->
+  <div class="panel">
+    <div class="students-header">
+      <div class="panel-head" style="margin-bottom:0">
+        <div class="panel-icon green">👥</div>
+        <div>
+          <div class="panel-title" data-i18n="lbl_enrolled">Enrolled Students</div>
+          <div class="panel-sub" data-i18n="msg_enrolled_list">List of students enrolled in this class.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+        {% if students and students|length > 0 %}
+        <div class="student-count">{{ students|length }} siswa</div>
+        {% endif %}
+        <a class="btn-manage" href="/teacher/class/{{ class_id }}/students" data-i18n="nav_manage_students">👥 Manage Students</a>
+      </div>
+    </div>
+
+    {% if students and students|length > 0 %}
+    <div class="student-grid">
+      {% for s in students %}
+      <div class="student-card">
+        <div class="student-avatar">{{ s.name[0]|upper }}</div>
+        <div>
+          <div class="student-name">{{ s.name }}</div>
+          <div class="student-user">@{{ s.username }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty" data-i18n="msg_no_students2">No students have joined this class yet.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+const socket = io();
+const classId = {{ class_id }};
+let activeSessionId = {% if active_session %}{{ active_session.id }}{% else %}null{% endif %};
+const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' };
+
+if (activeSessionId) {
+  socket.emit('join_session', { session_id: activeSessionId, name: "{{ name }}", role: "teacher" });
+}
+
+const btnStart = document.getElementById('btn-start');
+const btnEnd   = document.getElementById('btn-end');
+const sessionNameInput = document.getElementById('session-name');
+const sessionStatus    = document.getElementById('session-status');
+
+function setStatusActive(sessionName) {
+  sessionStatus.classList.remove('idle');
+  sessionStatus.classList.add('live');
+  sessionStatus.innerHTML = `<span class="status-dot"></span>Aktif: <span id="active-session-name">${sessionName}</span>`;
+  btnStart.disabled = true;
+  btnEnd.disabled   = false;
+}
+
+function setStatusIdle() {
+  sessionStatus.classList.remove('live');
+  sessionStatus.classList.add('idle');
+  sessionStatus.innerHTML = '<span class="status-dot"></span>Tidak ada sesi aktif';
+  btnStart.disabled = false;
+  btnEnd.disabled   = true;
+}
+
+// ── Live Camera Grid ──────────────────────────────
+const studentFrames = {};
+const EMOTION_ICONS  = { Happy:'😊', Engaged:'🙂', Confused:'😕', Frustrated:'😤' };
+const EMOTION_COLORS = { Happy:'#f59e0b', Engaged:'#10b981', Confused:'#f97316', Frustrated:'#ef4444' };
+
+socket.on('student_frame', (data) => {
+  const { student_id, name, frame, emotion } = data;
+  studentFrames[student_id] = { name, frame, emotion };
+  renderCameraGrid();
+});
+
+function renderCameraGrid() {
+  const grid  = document.getElementById('camera-grid');
+  const count = document.getElementById('cam-online-count');
+  const panel = document.getElementById('camera-panel');
+  const ids   = Object.keys(studentFrames);
+
+  if (!ids.length) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+  count.textContent = ids.length + ' online';
+
+  updateSuggestion();
+  grid.innerHTML = ids.map(id => {
+    const s       = studentFrames[id];
+    const noFace  = !s.emotion;
+    const icon    = noFace ? '📷' : (EMOTION_ICONS[s.emotion]  || '🙂');
+    const color   = noFace ? '#9ca3af' : (EMOTION_COLORS[s.emotion] || '#10b981');
+    const label   = noFace ? 'Not Detected' : s.emotion;
+    return `
+      <div class="cam-student-card">
+        <div class="cam-thumb-wrap">
+          <img class="cam-thumb" src="data:image/jpeg;base64,${s.frame}" alt="${s.name}">
+          <div class="cam-emotion-tag" style="background:${color}22;border-color:${color};color:${color}">
+            ${icon} ${label}
+          </div>
+        </div>
+        <div class="cam-sname">${s.name}</div>
+      </div>`;
+  }).join('');
+}
+const SUGGESTION_CFG = {
+  Confused: {
+    color: '#f97316', bg: '#fff7ed', border: '#fed7aa',
+    texts: {
+      en: 'Many students appear Confused. Consider re-explaining the current material or providing additional examples before starting the next round.',
+      id: 'Banyak siswa terdeteksi Confused. Pertimbangkan untuk menjelaskan ulang materi atau berikan contoh tambahan sebelum melanjutkan ronde berikutnya.',
+      my: 'Ramai pelajar kelihatan Confused. Pertimbangkan untuk menerangkan semula bahan atau berikan contoh tambahan sebelum meneruskan pusingan seterusnya.',
+    }
+  },
+  Frustrated: {
+    color: '#ef4444', bg: '#fef2f2', border: '#fecaca',
+    texts: {
+      en: 'Students show signs of Frustration. Consider giving a short break or simplifying your explanation. Avoid adding new material right now.',
+      id: 'Siswa menunjukkan tanda Frustrated. Pertimbangkan memberi jeda sebentar atau sederhanakan penjelasan. Hindari menambah materi baru saat ini.',
+      my: 'Pelajar menunjukkan tanda Frustrated. Pertimbangkan memberi rehat sebentar atau ringkaskan penerangan anda.',
+    }
+  },
+  Happy: {
+    color: '#f59e0b', bg: '#fffbeb', border: '#fde68a',
+    texts: {
+      en: 'Students seem to grasp the material well. Consider increasing the challenge level or accelerating the learning pace.',
+      id: 'Siswa tampak sangat memahami materi. Pertimbangkan menaikkan level tantangan atau mempercepat tempo pembelajaran.',
+      my: 'Pelajar nampak memahami bahan dengan baik. Pertimbangkan meningkatkan tahap cabaran atau mempercepatkan tempo pembelajaran.',
+    }
+  },
+  Engaged: {
+    color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0',
+    texts: {
+      en: 'Class conditions are ideal — students are focused and actively engaged. Continue the session as planned.',
+      id: 'Kondisi kelas ideal — siswa fokus dan terlibat aktif. Lanjutkan sesi sesuai rencana.',
+      my: 'Keadaan kelas ideal — pelajar fokus dan terlibat aktif. Teruskan sesi seperti yang dirancang.',
+    }
+  },
+  Mixed: {
+    color: '#7c3aed', bg: '#fdf4ff', border: '#e9d5ff',
+    texts: {
+      en: 'The class is heterogeneous. Pay attention to Confused/Frustrated students for individual intervention while others continue.',
+      id: 'Kondisi kelas heterogen. Perhatikan kelompok Confused/Frustrated untuk intervensi individual sementara siswa lain melanjutkan.',
+      my: 'Kelas adalah heterogen. Beri perhatian kepada pelajar Confused/Frustrated untuk intervensi individu.',
+    }
+  }
+};
+
+const EMO_COLORS = EMOTION_COLORS;
+
+function updateSuggestion() {
+  const panel = document.getElementById('suggestion-panel');
+  const textEl = document.getElementById('suggestion-text');
+  const emoRow = document.getElementById('suggestion-emo-row');
+  const barEl  = document.getElementById('suggestion-bar');
+  if (!panel) return;
+
+  const ids = Object.keys(studentFrames);
+  if (!ids.length || !activeSessionId) { panel.classList.remove('visible'); return; }
+
+  const counts = { Happy: 0, Engaged: 0, Confused: 0, Frustrated: 0 };
+  ids.forEach(id => {
+    const emo = studentFrames[id].emotion;
+    if (counts[emo] !== undefined) counts[emo]++;
+  });
+  const total = ids.length;
+  const pcts  = {};
+  Object.keys(counts).forEach(k => pcts[k] = Math.round(counts[k] / total * 100));
+
+  // dominant = highest count, min 25% to be "dominant"
+  const dominant = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+  const key = (dominant[1] / total >= 0.4) ? dominant[0] : 'Mixed';
+
+  const cfg  = SUGGESTION_CFG[key];
+  const lang = (typeof getLang === 'function') ? getLang() : 'en';
+  const msg  = cfg.texts[lang] || cfg.texts['en'];
+
+  // emotion chips row
+  emoRow.innerHTML = Object.entries(counts)
+    .filter(([,c]) => c > 0)
+    .sort((a,b) => b[1]-a[1])
+    .map(([emo, c]) => {
+      const col = EMO_COLORS[emo];
+      return `<span class="suggestion-emo-chip" style="color:${col};border-color:${col};background:${col}18">
+        ${EMOTION_ICONS[emo]} ${emo} <strong>${pcts[emo]}%</strong>
+      </span>`;
+    }).join('');
+
+  textEl.textContent = msg;
+
+  // bar
+  barEl.innerHTML = ['Happy','Engaged','Confused','Frustrated'].map(emo => {
+    const w = pcts[emo] || 0;
+    return w > 0
+      ? `<div class="suggestion-bar-seg" style="width:${w}%;background:${EMO_COLORS[emo]};border-radius:999px"></div>`
+      : '';
+  }).join('');
+
+  panel.classList.add('visible');
+}
+
+// ─────────────────────────────────────────────────
+
+btnStart.addEventListener('click', async () => {
+  const payload = { class_id: classId, session_name: sessionNameInput.value.trim() || undefined };
+  const res  = await fetch('/teacher/start-session', {
+    method: 'POST', headers: FETCH_HEADERS, body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (data.success) {
+    activeSessionId = data.session_id;
+    setStatusActive(payload.session_name || 'New Session');
+    socket.emit('join_session', { session_id: activeSessionId, name: "{{ name }}", role: "teacher" });
+  } else {
+    alert(t('msg_failed_start'));
+  }
+});
+
+btnEnd.addEventListener('click', async () => {
+  if (!activeSessionId) return;
+  const res  = await fetch('/teacher/end-session', {
+    method: 'POST', headers: FETCH_HEADERS, body: JSON.stringify({ session_id: activeSessionId })
+  });
+  const data = await res.json();
+  if (data.success) {
+    activeSessionId = null;
+    setStatusIdle();
+    const btnNR = document.getElementById('btn-next-round');
+    if (btnNR) btnNR.style.display = 'none';
+    const sp = document.getElementById('suggestion-panel');
+    if (sp) sp.classList.remove('visible');
+    const adjEl2 = document.getElementById('suggestion-adj');
+    if (adjEl2) adjEl2.style.display = 'none';
+  } else { alert(t('msg_failed_end')); }
+});
+
+socket.on('all_students_done', payload => {
+  const btn = document.getElementById('btn-next-round');
+  if (btn) {
+    btn.style.display = 'inline-flex';
+    btn.innerHTML = `▶ <span data-i18n="btn_next_round">Next Round</span> (${payload.finished}/${payload.total})`;
+  }
+
+  updateSuggestion();
+
+  const adjEl = document.getElementById('suggestion-adj');
+  if (adjEl) {
+    const DIFF_ICONS = { very_easy:'⬇⬇', easy:'⬇', medium:'➡', hard:'⬆', very_hard:'⬆⬆' };
+    const EMO_IC = { Happy:'😊', Engaged:'😤', Confused:'😕', Frustrated:'😠' };
+    const changes = (payload.adj_summary || []).filter(a => a.difficulty !== a.prev);
+    if (changes.length) {
+      adjEl.innerHTML = '<span style="font-size:11px;font-weight:900;opacity:.7">AUTO-ADJUST:</span>' +
+        changes.map(a =>
+          `<span class="suggestion-adj-chip">${EMO_IC[a.category]||''} ${a.category}: ${a.prev} ${DIFF_ICONS[a.difficulty]||'→'} <strong>${a.difficulty}</strong></span>`
+        ).join('');
+      adjEl.style.display = 'flex';
+    } else {
+      adjEl.style.display = 'none';
+    }
+  }
+});
+
+async function startNextRound() {
+  if (!activeSessionId) return;
+  const btn = document.getElementById('btn-next-round');
+  if (btn) btn.disabled = true;
+  const res  = await fetch('/api/start-round', {
+    method: 'POST', headers: FETCH_HEADERS,
+    body: JSON.stringify({ session_id: activeSessionId })
+  });
+  const data = await res.json();
+  if (data.success) {
+    if (btn) { btn.style.display = 'none'; btn.disabled = false; }
+  } else {
+    if (btn) btn.disabled = false;
+    alert('Failed to start round');
+  }
+}
+
+async function registerPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    const vapidRes = await fetch('/api/vapid-public-key');
+    const { public_key } = await vapidRes.json();
+
+    // convert base64url to Uint8Array
+    const b64 = public_key.replace(/-/g,'+').replace(/_/g,'/');
+    const raw = atob(b64);
+    const key = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) key[i] = raw.charCodeAt(i);
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: key
+    });
+
+    await fetch('/api/push-subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub)
+    });
+  } catch (e) {
+    console.warn('Push registration failed:', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', registerPushNotifications);
+window.addEventListener('langchange', updateSuggestion);
+</script>
+</body>
+</html>

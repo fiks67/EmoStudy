@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard — Emotion Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="/static/js/i18n.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;display:flex;height:100vh;overflow:hidden;background:#f0f9ff}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:linear-gradient(175deg,#0c4a6e 0%,#312e81 100%);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:width .28s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed{width:68px}
+
+/* Logo */
+.sidebar-logo{
+  padding:18px 14px 10px;
+  display:flex;align-items:center;gap:12px;
+  color:#fff;flex-shrink:0;overflow:hidden;min-height:66px;
+}
+.logo-icon{
+  min-width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;box-shadow:0 4px 14px rgba(14,165,233,.4);flex-shrink:0;
+}
+.logo-text{overflow:hidden;white-space:nowrap;transition:opacity .18s,max-width .28s;max-width:200px}
+.logo-text strong{display:block;font-size:14px;font-weight:900}
+.logo-text small{font-size:11px;color:rgba(255,255,255,.5);font-weight:600}
+.sidebar.collapsed .logo-text{opacity:0;max-width:0}
+
+.s-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:6px 12px;flex-shrink:0}
+.s-label{
+  padding:5px 14px 3px;font-size:10px;font-weight:900;
+  text-transform:uppercase;letter-spacing:1px;
+  color:rgba(255,255,255,.3);white-space:nowrap;
+  overflow:hidden;transition:opacity .15s;flex-shrink:0;
+}
+.sidebar.collapsed .s-label{opacity:0}
+
+/* Overview button */
+.s-overview{
+  margin:5px 10px;padding:10px 12px;
+  background:rgba(255,255,255,.08);
+  border:1.5px solid rgba(255,255,255,.15);
+  border-radius:13px;color:#fff;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:800;
+  display:flex;align-items:center;gap:10px;
+  transition:.18s;flex-shrink:0;overflow:hidden;white-space:nowrap;
+}
+.s-overview:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.28)}
+.s-overview .s-icon{font-size:17px;flex-shrink:0}
+.s-overview .s-txt{overflow:hidden;white-space:nowrap;transition:opacity .15s,max-width .28s;max-width:200px}
+.sidebar.collapsed .s-overview .s-txt{opacity:0;max-width:0}
+.sidebar.collapsed .s-overview{justify-content:center;padding:10px}
+
+/* Class list */
+.class-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:2px 8px}
+.class-list::-webkit-scrollbar{width:3px}
+.class-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+
+.c-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:12px;
+  cursor:pointer;transition:.15s;
+  color:rgba(255,255,255,.7);margin-bottom:2px;
+  overflow:hidden;white-space:nowrap;position:relative;
+}
+.c-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.c-item.active{background:rgba(14,165,233,.25);color:#fff;border:1.5px solid rgba(14,165,233,.35)}
+.c-icon{
+  min-width:34px;height:34px;border-radius:10px;
+  background:rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;transition:.15s;
+}
+.c-item.active .c-icon{background:linear-gradient(135deg,#0ea5e9,#7c3aed);box-shadow:0 2px 8px rgba(14,165,233,.4)}
+.c-info{overflow:hidden;min-width:0;transition:opacity .15s,max-width .28s;max-width:200px}
+.c-name{font-weight:800;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.c-meta{font-size:11px;color:rgba(255,255,255,.4);font-weight:600;margin-top:1px}
+.c-item.active .c-meta{color:rgba(255,255,255,.6)}
+.sidebar.collapsed .c-info{opacity:0;max-width:0}
+.sidebar.collapsed .c-item{justify-content:center;padding:9px}
+
+/* Tooltip when collapsed */
+.sidebar.collapsed .c-item[data-tip]:hover::after,
+.sidebar.collapsed .s-overview[data-tip]:hover::after,
+.sidebar.collapsed .f-btn[data-tip]:hover::after{
+  content:attr(data-tip);
+  position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:#1e293b;color:#e2e8f0;padding:6px 12px;
+  border-radius:9px;font-size:12px;font-weight:700;
+  white-space:nowrap;pointer-events:none;z-index:200;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  opacity:0;animation:tipIn .15s ease forwards;
+}
+@keyframes tipIn{to{opacity:1}}
+
+/* Footer */
+.s-footer{padding:6px 8px 14px;flex-shrink:0}
+.f-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:12px;
+  cursor:pointer;color:rgba(255,255,255,.55);
+  font-size:13px;font-weight:700;
+  text-decoration:none;transition:.15s;
+  width:100%;border:none;background:none;
+  font-family:inherit;white-space:nowrap;overflow:hidden;position:relative;
+}
+.f-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.f-btn.danger:hover{background:rgba(239,68,68,.18);color:#fca5a5}
+.f-icon{font-size:16px;flex-shrink:0}
+.f-txt{transition:opacity .15s,max-width .28s;max-width:200px;overflow:hidden}
+.sidebar.collapsed .f-txt{opacity:0;max-width:0}
+.sidebar.collapsed .f-btn{justify-content:center;padding:9px}
+
+/* ═══ MAIN ═══ */
+.main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;background:#f8fafc}
+
+/* Topbar */
+.topbar{
+  background:#fff;padding:0 24px;height:66px;
+  display:flex;align-items:center;gap:14px;
+  border-bottom:1.5px solid #e2e8f0;flex-shrink:0;
+  box-shadow:0 2px 16px rgba(0,0,0,.05);
+  position:sticky;top:0;z-index:10;
+}
+.menu-btn{
+  width:40px;height:40px;border-radius:12px;
+  border:1.5px solid #e2e8f0;background:#f8fafc;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.15s;flex-shrink:0;
+  font-size:17px;color:#64748b;
+}
+.menu-btn:hover{background:#f1f5f9;border-color:#cbd5e1;color:#0f172a}
+.topbar-info{flex:1;min-width:0}
+.t-title{font-size:16px;font-weight:900;color:#0f172a;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.t-sub{font-size:12px;color:#94a3b8;font-weight:600;margin-top:1px}
+.t-avatar{
+  flex-shrink:0;width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(124,58,237,.3);
+}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:#0f172a;color:#e2e8f0;
+  padding:12px 24px;border-radius:14px;
+  font-size:13px;font-weight:800;z-index:9999;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;
+  box-shadow:0 8px 32px rgba(0,0,0,.35);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Content */
+.content{padding:24px 28px;flex:1}
+
+/* Alerts */
+.alert-error,.alert-success{
+  padding:13px 20px;border-radius:14px;font-size:13px;
+  margin:16px 28px 0;font-weight:700;display:flex;align-items:center;gap:9px;
+}
+.alert-error{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca}
+.alert-success{background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0}
+
+/* Panel visibility */
+.welcome-panel,.class-detail{display:none}
+.welcome-panel.active,.class-detail.active{
+  display:block;
+  animation:fadeSlide .22s ease;
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Hero Banner ── */
+.hero{
+  background:linear-gradient(135deg,#0c4a6e 0%,#312e81 55%,#4c1d95 100%);
+  border-radius:24px;padding:28px 32px;color:#fff;
+  margin-bottom:22px;position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;top:-70px;right:-70px;width:240px;height:240px;
+  border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-50px;right:80px;width:160px;height:160px;
+  border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.hero-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hero-greeting{font-size:22px;font-weight:900;letter-spacing:-.3px}
+.hero-sub{font-size:13px;opacity:.65;font-weight:600;margin-top:5px}
+.hero-badge{
+  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);
+  border-radius:999px;padding:7px 16px;font-size:12px;font-weight:800;
+  white-space:nowrap;flex-shrink:0;
+}
+.hero-stats{display:flex;gap:12px;margin-top:22px;position:relative;flex-wrap:wrap}
+.hs{
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);
+  border-radius:16px;padding:14px 20px;flex:1;min-width:100px;
+}
+.hs-num{font-size:26px;font-weight:900;line-height:1}
+.hs-lbl{font-size:11px;opacity:.65;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Panel box ── */
+.panel{
+  background:#fff;border-radius:22px;padding:24px;
+  margin-bottom:20px;border:1.5px solid #e2e8f0;
+  box-shadow:0 2px 14px rgba(0,0,0,.05);
+}
+.p-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.p-icon{
+  width:42px;height:42px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.p-icon.cyan{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+.p-icon.violet{background:linear-gradient(135deg,#ede9fe,#ddd6fe)}
+.p-title{font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px}
+.p-sub{color:#94a3b8;font-size:12px;font-weight:600}
+
+/* Create form */
+.create-form{display:flex;gap:10px;flex-wrap:wrap}
+.create-form input{
+  flex:1;min-width:200px;border:1.5px solid #e2e8f0;
+  border-radius:13px;padding:12px 16px;font-size:14px;
+  font-family:inherit;background:#f8fafc;font-weight:600;
+  transition:.2s;color:#0f172a;
+}
+.create-form input:focus{border-color:#0ea5e9;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.create-form button{
+  border:none;border-radius:13px;padding:12px 24px;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:14px;
+  cursor:pointer;font-family:inherit;transition:.18s;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(14,165,233,.3);
+}
+.create-form button:hover{opacity:.9;box-shadow:0 6px 20px rgba(14,165,233,.42);transform:translateY(-2px)}
+.create-form button:active{transform:translateY(0)}
+
+/* Empty state */
+.empty{
+  text-align:center;color:#94a3b8;padding:48px 24px;
+  border:2px dashed #e2e8f0;border-radius:20px;background:#f8fafc;
+  font-size:14px;font-weight:700;
+}
+.empty-icon{font-size:40px;margin-bottom:12px;display:block}
+
+/* Class cards grid */
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.class-card{
+  background:#fff;border:1.5px solid #e2e8f0;border-radius:20px;
+  padding:20px;cursor:pointer;transition:.2s;
+  position:relative;overflow:hidden;text-align:left;
+  font-family:inherit;display:flex;flex-direction:column;gap:0;
+}
+.class-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#0ea5e9,#7c3aed);
+  opacity:0;transition:.2s;
+}
+.class-card:hover{border-color:#c4b5fd;box-shadow:0 8px 28px rgba(124,58,237,.12);transform:translateY(-3px)}
+.class-card:hover::before{opacity:1}
+.cc-icon{
+  width:48px;height:48px;border-radius:14px;margin-bottom:14px;
+  background:linear-gradient(135deg,#f0f9ff,#ede9fe);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.cc-name{font-size:14px;font-weight:900;color:#0f172a;margin-bottom:5px}
+.cc-meta{font-size:12px;color:#94a3b8;font-weight:600;display:flex;align-items:center;gap:5px}
+.cc-arrow{
+  margin-top:14px;display:inline-flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:800;color:#7c3aed;
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+  padding:5px 12px;border-radius:999px;
+  width:fit-content;transition:.2s;
+}
+.class-card:hover .cc-arrow{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff}
+
+/* ── Class detail ── */
+.class-header{
+  background:linear-gradient(135deg,#0284c7 0%,#7c3aed 100%);
+  border-radius:24px;padding:28px 32px;color:#fff;
+  margin-bottom:20px;position:relative;overflow:hidden;
+}
+.ch-bg1{position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.ch-bg2{position:absolute;bottom:-50px;right:80px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
+.ch-back{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);border-radius:10px;padding:6px 14px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:.15s;position:relative}
+.ch-back:hover{background:rgba(255,255,255,.28)}
+.ch-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative}
+.ch-name{font-size:26px;font-weight:900;letter-spacing:-.3px}
+.ch-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;position:relative}
+.ch-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.26);
+  padding:5px 13px;border-radius:999px;font-size:12px;font-weight:800;
+}
+.code-box{
+  background:rgba(255,255,255,.12);border:2px dashed rgba(255,255,255,.38);
+  border-radius:18px;padding:14px 22px;margin-top:20px;
+  display:inline-block;cursor:pointer;transition:.2s;position:relative;
+}
+.code-box:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6)}
+.code-box:active{transform:scale(.98)}
+.code-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.2px;opacity:.65;margin-bottom:4px}
+.code-value{font-size:28px;font-weight:900;letter-spacing:6px}
+.code-hint{font-size:11px;opacity:.55;font-weight:700;margin-top:6px}
+
+/* Live session badge */
+.live-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(16,185,129,.18);border:1.5px solid rgba(16,185,129,.45);
+  border-radius:999px;padding:8px 18px;
+  font-size:13px;font-weight:900;color:#d1fae5;
+  white-space:nowrap;flex-shrink:0;
+}
+.live-dot{
+  width:9px;height:9px;border-radius:50%;background:#34d399;flex-shrink:0;
+  box-shadow:0 0 0 0 rgba(52,211,153,.6);
+  animation:livePulse 1.8s ease-in-out infinite;
+}
+@keyframes livePulse{
+  0%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}
+  70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}
+  100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}
+}
+/* Sidebar live dot */
+.c-live{
+  width:8px;height:8px;border-radius:50%;background:#34d399;flex-shrink:0;
+  margin-left:auto;animation:livePulse 1.8s ease-in-out infinite;
+}
+.sidebar.collapsed .c-live{display:none}
+
+
+
+/* ── Action cards ── */
+.action-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.ac{
+  display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  padding:20px 18px 18px;border-radius:20px;
+  text-decoration:none;transition:.22s;
+  position:relative;overflow:hidden;
+}
+.ac::after{
+  content:'→';position:absolute;bottom:16px;right:18px;
+  font-size:16px;font-weight:900;opacity:.4;transition:.22s;
+}
+.ac:hover::after{opacity:1;transform:translateX(3px)}
+.ac:hover{transform:translateY(-5px)}
+.ac:active{transform:translateY(-1px)}
+.ac-em{
+  width:46px;height:46px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:14px;flex-shrink:0;
+}
+.ac-lbl{font-size:13px;font-weight:900;line-height:1.2}
+.ac-desc{font-size:11px;font-weight:600;margin-top:4px;opacity:.7}
+
+.ac.open{background:linear-gradient(145deg,#e0f2fe,#f0f9ff);color:#0369a1;border:1.5px solid #bae6fd}
+.ac.open .ac-em{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;box-shadow:0 4px 14px rgba(14,165,233,.4)}
+.ac.open:hover{box-shadow:0 12px 32px rgba(14,165,233,.2);border-color:#7dd3fc}
+
+.ac.reports{background:linear-gradient(145deg,#ede9fe,#fdf4ff);color:#5b21b6;border:1.5px solid #ddd6fe}
+.ac.reports .ac-em{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.4)}
+.ac.reports:hover{box-shadow:0 12px 32px rgba(124,58,237,.2);border-color:#c4b5fd}
+
+.ac.emotions{background:linear-gradient(145deg,#d1fae5,#ecfdf5);color:#065f46;border:1.5px solid #a7f3d0}
+.ac.emotions .ac-em{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.4)}
+.ac.emotions:hover{box-shadow:0 12px 32px rgba(16,185,129,.2);border-color:#6ee7b7}
+
+.ac.students{background:linear-gradient(145deg,#fef3c7,#fffbeb);color:#92400e;border:1.5px solid #fde68a}
+.ac.students .ac-em{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.4)}
+.ac.students:hover{box-shadow:0 12px 32px rgba(245,158,11,.2);border-color:#fcd34d}
+
+.ac.questions{background:linear-gradient(145deg,#f1f5f9,#f8fafc);color:#334155;border:1.5px solid #cbd5e1}
+.ac.questions .ac-em{background:linear-gradient(135deg,#64748b,#475569);color:#fff;box-shadow:0 4px 14px rgba(100,116,139,.3)}
+.ac.questions:hover{box-shadow:0 12px 32px rgba(100,116,139,.15);border-color:#94a3b8}
+
+/* ── Delete zone ── */
+.delete-zone{
+  background:#fff5f5;border:1.5px solid #fecaca;border-radius:20px;
+  padding:20px 24px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:14px;
+}
+.dz-left{display:flex;align-items:center;gap:14px}
+.dz-icon{
+  width:44px;height:44px;border-radius:14px;
+  background:linear-gradient(135deg,#fee2e2,#fecaca);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.dz-text h3{font-size:14px;font-weight:900;color:#dc2626;margin-bottom:3px}
+.dz-text p{font-size:12px;color:#94a3b8;font-weight:600}
+.btn-del{
+  padding:11px 22px;
+  background:linear-gradient(135deg,#f43f5e,#dc2626);
+  color:#fff;border:none;border-radius:13px;
+  font-size:13px;font-weight:900;cursor:pointer;
+  font-family:inherit;transition:.15s;
+  box-shadow:0 4px 16px rgba(220,38,38,.3);
+}
+.btn-del:hover{box-shadow:0 6px 20px rgba(220,38,38,.45);transform:translateY(-2px)}
+.btn-del:active{transform:translateY(0)}
+
+/* ── Edit Profile form ── */
+.field-group{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:12px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+.field-input{
+  border:1.5px solid #e2e8f0;border-radius:13px;
+  padding:12px 16px;font-size:14px;font-family:inherit;
+  background:#f8fafc;font-weight:600;color:#0f172a;
+  transition:.2s;
+}
+.field-input:focus{border-color:#0ea5e9;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.save-btn{
+  border:none;border-radius:13px;padding:12px 28px;
+  background:linear-gradient(135deg,#0ea5e9,#7c3aed);
+  color:#fff;font-weight:900;font-size:14px;
+  cursor:pointer;font-family:inherit;transition:.18s;
+  box-shadow:0 4px 16px rgba(14,165,233,.3);
+}
+.save-btn:hover{opacity:.9;box-shadow:0 6px 20px rgba(14,165,233,.42);transform:translateY(-2px)}
+.save-btn:active{transform:translateY(0)}
+
+@media(max-width:600px){
+  .field-group+.field-group{margin-top:0}
+  form>[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+}
+
+/* Overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:19;backdrop-filter:blur(2px)}
+
+/* Lang switcher */
+.lang-switcher{
+  display:inline-flex;align-items:center;
+  background:#f1f5f9;border-radius:12px;padding:3px;gap:2px;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.06);
+}
+.lang-btn{
+  padding:6px 13px;border:none;border-radius:9px;
+  background:transparent;color:#64748b;
+  font-size:12px;font-weight:800;letter-spacing:.4px;
+  cursor:pointer;transition:all .2s;
+  font-family:'Nunito',sans-serif;
+}
+.lang-btn:hover{background:#e2e8f0;color:#334155}
+.lang-btn--active{
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  color:#fff;
+  box-shadow:0 2px 8px rgba(99,102,241,.4);
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:800px){
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;z-index:20;
+    width:260px !important;
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+  }
+  .sidebar.mobile-open{transform:translateX(0)}
+  .overlay.open{display:block}
+  .content{padding:16px 18px}
+  .topbar{padding:0 18px}
+  .hero{padding:20px 22px}
+  .hero-greeting{font-size:18px}
+  .class-header{padding:22px 20px}
+}
+@media(max-width:500px){
+  .action-grid{grid-template-columns:1fr 1fr}
+  .class-grid{grid-template-columns:1fr 1fr}
+  .hero-stats{gap:8px}
+  .hs{padding:12px 14px}
+  .ch-name{font-size:20px}
+  .code-value{font-size:20px;letter-spacing:3px}
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeMobile()"></div>
+<div class="toast" id="toast"></div>
+
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar" id="sidebar">
+
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-text">
+      <strong>Emotion Learning</strong>
+      <small>{{ name }}</small>
+    </div>
+  </div>
+
+  <hr class="s-divider">
+
+  <button class="s-overview" onclick="showPanel('welcome')" data-tip="Overview">
+    <span class="s-icon">🏠</span>
+    <span class="s-txt" data-i18n="nav_dashboard">Dashboard</span>
+  </button>
+
+  <hr class="s-divider">
+  <div class="s-label" data-i18n="title_your_classes">Your Classes</div>
+
+  <div class="class-list">
+    {% if classes and classes|length > 0 %}
+      {% for c in classes %}
+      <div class="c-item" id="sc-{{ c.id }}" onclick="showClass({{ c.id }})" data-tip="{{ c.class_name }}">
+        <div class="c-icon">📚</div>
+        <div class="c-info">
+          <div class="c-name">{{ c.class_name }}</div>
+          <div class="c-meta">👥 {{ c.student_count or 0 }} <span data-i18n="lbl_students">students</span></div>
+        </div>
+        {% if c.has_active_session %}<span class="c-live" title="Live session"></span>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="padding:14px 10px;text-align:center;font-size:12px;color:rgba(255,255,255,.28);font-weight:700" data-i18n="msg_no_class">No classes yet</div>
+    {% endif %}
+  </div>
+
+  <div class="s-footer">
+    <hr class="s-divider" style="margin:0 0 6px">
+    <button class="f-btn" onclick="showPanel('edit-profile')" data-tip="Edit Profile">
+      <span class="f-icon">✏️</span>
+      <span class="f-txt" data-i18n="title_edit_profile">Edit Profile</span>
+    </button>
+    <button class="f-btn" onclick="showPanel('add-teacher')" data-tip="Add Teacher">
+      <span class="f-icon">👩‍🏫</span>
+      <span class="f-txt" data-i18n="title_add_teacher">Add New Teacher</span>
+    </button>
+    <a class="f-btn danger" href="/logout" data-tip="Sign Out">
+      <span class="f-icon">🚪</span>
+      <span class="f-txt" data-i18n="btn_sign_out">Sign Out</span>
+    </a>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <div class="topbar">
+    <button class="menu-btn" id="menuBtn" onclick="handleMenu()">☰</button>
+    <div class="topbar-info">
+      <div class="t-title" id="tTitle">👋 Teacher Dashboard</div>
+      <div class="t-sub" id="tSub">Welcome back, <strong>{{ name }}</strong>!</div>
+    </div>
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="id" onclick="setLang('id')">ID</button>
+      <button class="lang-btn" data-lang="my" onclick="setLang('my')">MY</button>
+    </div>
+    <div class="t-avatar" title="{{ name }}">{{ name[0]|upper if name else 'T' }}</div>
+  </div>
+
+  {% if error %}<div class="alert-error">⚠ {{ error }}</div>{% endif %}
+  {% if success %}<div class="alert-success">✓ {{ success }}</div>{% endif %}
+
+  <div class="content">
+
+    <!-- Overview -->
+    <div class="welcome-panel active" id="panel-welcome">
+
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <div class="hero-greeting">Hello, {{ name }}! 👋</div>
+            <div class="hero-sub" data-i18n="msg_welcome_dash">Welcome to the teacher dashboard — manage classes &amp; monitor student emotions.</div>
+          </div>
+          <div class="hero-badge">🎓 Teacher</div>
+        </div>
+        <div class="hero-stats">
+          <div class="hs">
+            <div class="hs-num">{{ classes|length if classes else 0 }}</div>
+            <div class="hs-lbl">🏫 <span data-i18n="lbl_class">Classes</span></div>
+          </div>
+          <div class="hs">
+            <div class="hs-num">{{ classes|sum(attribute='student_count') if classes else 0 }}</div>
+            <div class="hs-lbl">👥 <span data-i18n="lbl_students">Students</span></div>
+          </div>
+          <div class="hs">
+            <div class="hs-num">{{ classes|selectattr('student_count','gt',0)|list|length if classes else 0 }}</div>
+            <div class="hs-lbl">✅ <span data-i18n="status_active">Active</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="p-head">
+          <div class="p-icon cyan">➕</div>
+          <div>
+            <div class="p-title" data-i18n="title_create_class">Create New Class</div>
+            <div class="p-sub" data-i18n="msg_auto_class_code">A unique class code will be generated automatically.</div>
+          </div>
+        </div>
+        <form class="create-form" action="/teacher/create-class" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="class_name" placeholder="e.g. Math 3A" required>
+          <button type="submit" data-i18n="btn_create">+ Create Class</button>
+        </form>
+      </div>
+
+      {% if classes and classes|length > 0 %}
+      <div class="panel">
+        <div class="p-head">
+          <div class="p-icon violet">🏫</div>
+          <div>
+            <div class="p-title" data-i18n="title_your_classes">Your Classes</div>
+            <div class="p-sub" data-i18n="msg_click_card">Click a class card to manage.</div>
+          </div>
+        </div>
+        <div class="class-grid">
+          {% for c in classes %}
+          <button class="class-card" onclick="showClass({{ c.id }})">
+            <div class="cc-icon">📚</div>
+            <div class="cc-name">{{ c.class_name }}</div>
+            <div class="cc-meta">👥 {{ c.student_count or 0 }} <span data-i18n="lbl_students">students</span></div>
+            <div class="cc-arrow" data-i18n="cc_manage">Manage →</div>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="empty">
+        <span class="empty-icon">🎉</span>
+        <span data-i18n="msg_no_class">No classes yet. Create your first class above!</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Add Teacher -->
+    <div class="welcome-panel" id="panel-add-teacher">
+      <div class="panel">
+        <div class="p-head">
+          <div class="p-icon violet">👩‍🏫</div>
+          <div>
+            <div class="p-title" data-i18n="title_add_teacher">Add New Teacher</div>
+            <div class="p-sub" data-i18n="msg_add_teacher_sub">Only logged-in teachers can do this.</div>
+          </div>
+        </div>
+        <form class="create-form" action="/teacher/add-teacher" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="name" placeholder="Full name" required>
+          <input type="text" name="username" placeholder="Username" required>
+          <input type="password" name="password" placeholder="Password" required>
+          <button type="submit" data-i18n="btn_add_teacher">+ Add Teacher</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Profile -->
+    <div class="welcome-panel" id="panel-edit-profile">
+      <div class="panel">
+        <div class="p-head">
+          <div class="p-icon cyan">✏️</div>
+          <div>
+            <div class="p-title" data-i18n="title_edit_profile">Edit Profile</div>
+            <div class="p-sub" data-i18n="lbl_edit_profile_sub">Change your name, username, or password.</div>
+          </div>
+        </div>
+        <form action="/teacher/edit-profile" method="POST" style="display:flex;flex-direction:column;gap:14px">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field-group">
+              <label class="field-label" data-i18n="lbl_fullname">Full Name</label>
+              <input class="field-input" type="text" name="name" value="{{ name }}" required placeholder="Full name">
+            </div>
+            <div class="field-group">
+              <label class="field-label" data-i18n="lbl_username">Username</label>
+              <input class="field-input" type="text" name="username" value="{{ session_username }}" required placeholder="Username">
+            </div>
+          </div>
+          <hr style="border:none;border-top:1.5px dashed #e2e8f0">
+          <div class="field-group">
+            <label class="field-label" data-i18n="lbl_current_password">Current Password *</label>
+            <input class="field-input" type="password" name="current_password" required placeholder="Required to save changes">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field-group">
+              <label class="field-label" data-i18n="lbl_new_password">New Password (optional)</label>
+              <input class="field-input" type="password" name="new_password" placeholder="Leave blank to keep current">
+            </div>
+            <div class="field-group">
+              <label class="field-label" data-i18n="lbl_confirm_password">Confirm New Password</label>
+              <input class="field-input" type="password" name="confirm_password" placeholder="Repeat new password">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button type="submit" class="save-btn" data-i18n="btn_save">💾 Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Per-class panels -->
+    {% for c in classes %}
+    <div class="class-detail" id="panel-class-{{ c.id }}">
+
+      <div class="class-header">
+        <div class="ch-bg1"></div><div class="ch-bg2"></div>
+        <button class="ch-back" onclick="showPanel('welcome')">← <span data-i18n="title_your_classes">Your Classes</span></button>
+        <div class="ch-top">
+          <div>
+            <div class="ch-name">{{ c.class_name }}</div>
+            <div class="ch-badges">
+              <span class="ch-badge">👥 {{ c.student_count or 0 }} <span data-i18n="lbl_students">students</span></span>
+              <span class="ch-badge">📚 <span data-i18n="lbl_active_class">Active class</span></span>
+            </div>
+          </div>
+          {% if c.has_active_session %}
+          <div class="live-badge">
+            <span class="live-dot"></span>
+            Live · {{ c.active_session_name or 'Session' }}
+          </div>
+          {% endif %}
+        </div>
+        <div class="code-box" onclick="copyCode('{{ c.class_code }}','{{ c.id }}')" title="">
+          <div class="code-label" data-i18n="lbl_class_code">Class Code</div>
+          <div class="code-value">{{ c.class_code }}</div>
+          <div class="code-hint" id="ch-{{ c.id }}" data-i18n="btn_copy">📋 Click to copy</div>
+        </div>
+      </div>
+
+      <div class="action-grid">
+        <a class="ac open" href="/teacher/class/{{ c.id }}">
+          <div class="ac-em">🖥️</div>
+          <div class="ac-lbl" data-i18n="btn_open_class">Open Classroom</div>
+          <div class="ac-desc" data-i18n="ac_desc_open">Open live session</div>
+        </a>
+        <a class="ac reports" href="/teacher/reports/{{ c.id }}">
+          <div class="ac-em">📊</div>
+          <div class="ac-lbl" data-i18n="nav_reports">Reports</div>
+          <div class="ac-desc" data-i18n="ac_desc_reports">View session reports</div>
+        </a>
+        <a class="ac emotions" href="/teacher/emotion-groups/{{ c.id }}">
+          <div class="ac-em">😊</div>
+          <div class="ac-lbl" data-i18n="nav_emotions">Emotions</div>
+          <div class="ac-desc" data-i18n="ac_desc_emotions">Student emotion groups</div>
+        </a>
+        <a class="ac students" href="/teacher/class/{{ c.id }}/students">
+          <div class="ac-em">👥</div>
+          <div class="ac-lbl" data-i18n="lbl_students">Students</div>
+          <div class="ac-desc" data-i18n="ac_desc_students">Student list</div>
+        </a>
+        <a class="ac questions" href="/teacher/questions">
+          <div class="ac-em">❓</div>
+          <div class="ac-lbl" data-i18n="nav_questions">Questions</div>
+          <div class="ac-desc" data-i18n="ac_desc_questions">Manage quiz questions</div>
+        </a>
+      </div>
+
+      <div class="delete-zone">
+        <div class="dz-left">
+          <div class="dz-icon">🗑️</div>
+          <div class="dz-text">
+            <h3 data-i18n="btn_delete_class">Delete Class</h3>
+            <p data-i18n="msg_delete_class">Permanently deletes the class and all its sessions and data.</p>
+          </div>
+        </div>
+        <form action="/teacher/delete-class/{{ c.id }}" method="POST"
+              onsubmit="return confirm('Delete class {{ c.class_name }} and all its data?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn-del" data-i18n="btn_delete_class">Delete Class</button>
+        </form>
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────
+let isDesktopCollapsed = localStorage.getItem('sb') === '1';
+const isMobile = () => window.innerWidth <= 800;
+
+// Apply saved desktop state
+if (isDesktopCollapsed && !isMobile()) {
+  document.getElementById('sidebar').classList.add('collapsed');
+}
+
+// ── Menu button ────────────────────────────────────
+function handleMenu() {
+  if (isMobile()) {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('overlay').classList.toggle('open');
+  } else {
+    isDesktopCollapsed = !isDesktopCollapsed;
+    localStorage.setItem('sb', isDesktopCollapsed ? '1' : '0');
+    document.getElementById('sidebar').classList.toggle('collapsed', isDesktopCollapsed);
+  }
+}
+function closeMobile() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── Panel switching ────────────────────────────────
+function getPanelTitle(panel) {
+  const map = {
+    welcome:        [t('title_teacher_dash'), 'Welcome back, <strong>{{ name }}</strong>!'],
+    'add-teacher':  [t('title_add_teacher'),  t('msg_add_teacher_sub')],
+    'edit-profile': [t('title_edit_profile'), t('lbl_edit_profile_sub')],
+  };
+  return map[panel] || [t('nav_dashboard'), ''];
+}
+
+function showPanel(name) {
+  document.querySelectorAll('.welcome-panel,.class-detail').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.c-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('panel-' + name)?.classList.add('active');
+  const [title, sub] = getPanelTitle(name);
+  document.getElementById('tTitle').textContent = title;
+  document.getElementById('tSub').innerHTML = sub;
+  if (isMobile()) closeMobile();
+}
+
+function showClass(id) {
+  document.querySelectorAll('.welcome-panel,.class-detail').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.c-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('panel-class-' + id)?.classList.add('active');
+  const item = document.getElementById('sc-' + id);
+  item?.classList.add('active');
+  document.getElementById('tTitle').textContent = '📚 ' + (item?.querySelector('.c-name')?.textContent?.trim() || 'Class');
+  document.getElementById('tSub').textContent = item?.querySelector('.c-meta')?.textContent?.trim() || '';
+  if (isMobile()) closeMobile();
+}
+
+
+// ── Copy code ──────────────────────────────────────
+function copyCode(code, id) {
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('✓ Code ' + code + ' copied!');
+    const hint = document.getElementById('ch-' + id);
+    if (hint) { hint.textContent = t('btn_copied'); setTimeout(() => hint.textContent = t('btn_copy'), 2000); }
+  }).catch(() => showToast('Failed to copy — try manually'));
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+// Auto-open class panel if ?class=id param present (e.g. coming back from classroom)
+const _classParam = new URLSearchParams(location.search).get('class');
+if (_classParam) {
+  showClass(parseInt(_classParam));
+} else if ({% if classes and classes|length == 1 %}true{% else %}false{% endif %}) {
+  document.getElementById('sc-{{ classes[0].id if classes and classes|length == 1 else "" }}')?.classList.add('active');
+}
+
+// Sync topbar title/sub with current language on load and on lang change
+function syncTopbar() {
+  const active = document.querySelector('.welcome-panel.active, .class-detail.active');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'panel-welcome' || id === 'panel-add-teacher' || id === 'panel-edit-profile') {
+    const panel = id.replace('panel-', '');
+    const [title, sub] = getPanelTitle(panel);
+    document.getElementById('tTitle').textContent = title;
+    document.getElementById('tSub').innerHTML = sub;
+  }
+}
+document.addEventListener('DOMContentLoaded', syncTopbar);
+const _origSetLang = typeof setLang === 'function' ? setLang : null;
+if (_origSetLang) {
+  window.setLang = function(lang) { _origSetLang(lang); syncTopbar(); };
+}
+</script>
+</body>
+</html>
